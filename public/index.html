@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Saito Asuka!!! ੭ ᐕ)੭*⁾⁾</title>
+    <link rel="stylesheet" type="text/css" href="https://saitoasuka-1258793314.file.myqcloud.com/css/w3.css">
+    <style type="text/css">
+        html {
+            font-size: 15px;
+        }
+
+        @media screen and (max-width: 768px) {
+
+            html {
+                font-size: 13px;
+            }
+        }
+
+        @media screen and (max-width: 375px) {
+
+            html {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+    <!-- 使用CDN的JS文件 -->
+    <% for (var i in htmlWebpackPlugin.options.cdn && htmlWebpackPlugin.options.cdn.js) { %>
+        <script type="text/javascript" src="<%= htmlWebpackPlugin.options.cdn.js[i] %>"></script>
+    <% } %>
+</body>
+
+</html>

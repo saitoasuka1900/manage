@@ -11,13 +11,16 @@ const cdn = {
     js: [
         'https://cdn.bootcss.com/vue/2.6.11/vue.min.js',
         'https://cdn.bootcss.com/vue-router/3.1.3/vue-router.min.js',
-    ]
+        'https://cdn.bootcss.com/axios/0.18.1/axios.min.js',
+        'https://cdn.bootcss.com/element-ui/2.13.0/index.js',
+        'https://cdn.bootcss.com/vuex/3.1.2/vuex.min.js',
+    ],
 }
 
 module.exports = {
     publicPath: '',
     productionSourceMap: false,
-    outputDir: 'dist/manage',
+    outputDir: 'manage',
     assetsDir: 'static',
 
     chainWebpack: (config) => {
@@ -39,15 +42,6 @@ module.exports = {
             .set('assets', resolve('src/assets'))
             .set('components', resolve('src/components'))
 
-        const svgRule = config.module.rule('svg')
-
-        // 清除已有的所有 loader。
-        // 如果你不这样做，接下来的 loader 会附加在该规则现有的 loader 之后。
-        svgRule.uses.clear()
-        config.module
-            .rule('svg-sprite')
-            .use('svgo-loader')
-            .loader('svgo-loader')
 
         // vue-cli3 以上版本默认vue-loader不识别&nbsp; 需要修改preserveWhitespace为true
         config.module
@@ -76,6 +70,9 @@ module.exports = {
             config.externals = {
                 'vue': 'Vue',
                 'vue-router': 'VueRouter',
+                'axios': 'axios',
+                'element-ui': 'ELEMENT',
+                'vuex': 'Vuex',
             }
             // 打包生产.gz包
             config.plugins.push(

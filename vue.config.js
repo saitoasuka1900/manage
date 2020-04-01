@@ -13,8 +13,8 @@ const cdn = {
         'https://cdn.bootcss.com/vue-router/3.1.3/vue-router.min.js',
         'https://cdn.bootcss.com/axios/0.18.1/axios.min.js',
         'https://cdn.bootcss.com/element-ui/2.13.0/index.js',
-        'https://cdn.bootcss.com/vuex/3.1.2/vuex.min.js',
-    ],
+        'https://cdn.bootcss.com/vuex/3.1.2/vuex.min.js'
+    ]
 }
 
 module.exports = {
@@ -42,7 +42,6 @@ module.exports = {
             .set('assets', resolve('src/assets'))
             .set('components', resolve('src/components'))
 
-
         // vue-cli3 以上版本默认vue-loader不识别&nbsp; 需要修改preserveWhitespace为true
         config.module
             .rule('vue')
@@ -68,11 +67,11 @@ module.exports = {
             比如'vue-router': 'VueRouter'，业务代码中使用import router from 'vue-router'，
             webpack就会去查找VueRouter这个全局变量。*/
             config.externals = {
-                'vue': 'Vue',
+                vue: 'Vue',
                 'vue-router': 'VueRouter',
-                'axios': 'axios',
+                axios: 'axios',
                 'element-ui': 'ELEMENT',
-                'vuex': 'Vuex',
+                vuex: 'Vuex'
             }
             // 打包生产.gz包
             config.plugins.push(
@@ -112,4 +111,5 @@ module.exports = {
             }
         }
     },
+
 }

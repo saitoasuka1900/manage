@@ -1,7 +1,23 @@
 <template>
     <el-container style="height: 100vh;">
-        <el-main :style="{ backgroundImage: 'url(\'' + bgurl + '\')' }"></el-main>
-        <el-footer :height="'4vh'">
+        <el-main :style="{ backgroundImage: 'url(\'' + bgurl + '\')' }">
+            <el-button @click="centerDialogVisible = true">点击打开登录框</el-button>
+            <el-dialog title="后台登陆" :visible.sync="centerDialogVisible" :width="LoginModuleSize" center>
+                <div>
+                    <span class="label">用户名：</span>
+                    <el-input placeholder="请输入用户名" v-model="username" />
+                </div>
+                <div style="margin-top: 5px">
+                    <span class="label">密码：</span>
+                    <el-input placeholder="请输入密码" v-model="password" />
+                </div>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="centerDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="Login()">登 录</el-button>
+                </span>
+            </el-dialog>
+        </el-main>
+        <el-footer :height="'8vh'">
             <a href="http://www.beian.miit.gov.cn" target="_blank" style="color: white; text-decoration: none;">
                 闽ICP备20003864号
             </a>
@@ -14,24 +30,42 @@ export default {
     data() {
         return {
             url_root: 'https://saitoasuka-1258793314.file.myqcloud.com/manage/login/',
-            bgurl: ''
+            bgurl: '',
+            centerDialogVisible: true,
+            LoginModuleSize: '',
+            username: '',
+            password: ''
         }
     },
-    mounted: function() {
-        this.bgurl =
-            document.documentElement.clientWidth > 950
-                ? this.url_root + 'login_bg_max.jpg'
-                : document.documentElement.clientWidth > 630
-                ? this.url_root + 'login_bg_mid.jpg'
-                : this.url_root + 'login_bg_min.jpg'
-        window.addEventListener('resize', () => {
+    methods: {
+        Login() {
+            alert('1')
+        },
+        listenWidth() {
             this.bgurl =
                 document.documentElement.clientWidth > 950
                     ? this.url_root + 'login_bg_max.jpg'
                     : document.documentElement.clientWidth > 630
                     ? this.url_root + 'login_bg_mid.jpg'
                     : this.url_root + 'login_bg_min.jpg'
-        })
+
+            this.LoginModuleSize = document.documentElement.clientWidth > 750 ? '450px' : '350px'
+        }
+    },
+    created: function() {
+        this.bgurl =
+            document.documentElement.clientWidth > 950
+                ? this.url_root + 'login_bg_max.jpg'
+                : document.documentElement.clientWidth > 630
+                ? this.url_root + 'login_bg_mid.jpg'
+                : this.url_root + 'login_bg_min.jpg'
+
+        this.LoginModuleSize = document.documentElement.clientWidth > 750 ? '450px' : '350px'
+
+        window.addEventListener('resize', this.listenWidth)
+    },
+    beforeDestroy: function() {
+        window.removeEventListener('resize', this.listenWidth)
     }
 }
 </script>
@@ -44,7 +78,14 @@ export default {
 }
 .el-footer {
     background-color: rgb(0, 0, 0);
-    line-height: 4vh;
+    line-height: 8vh;
     text-align: center;
+    flex-direction: row;
+    justify-content: center;
+}
+.label {
+    display: inline-block;
+    font-size: 14px;
+    margin-bottom: 5px;
 }
 </style>

@@ -15,7 +15,11 @@ const routes = [
         name: 'index',
         component: () => import('@/views/index'),
         children: [
-            
+            {
+                path: "user",
+                component: () => import("components/items/user"),
+                alias: "",
+            }
         ],
     },
     {

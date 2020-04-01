@@ -16,15 +16,14 @@
                     @close="handleClose"
                     :collapse="!isCollapse"
                     background-color="rgba(0, 0, 0, 0)"
-                    text-color="#fff"
-                    active-text-color="#ffd04b"
+                    text-color="black"
+                    active-text-color="red"
                     :unique-opened="true"
-                    v-if="isloaded"
                 >
                     <template v-for="item in naviItem">
                         <el-submenu :index="item.id" :key="item.id + 's'" v-if="item.childItem.length > 0">
                             <template slot="title">
-                                <i :class="item.iconName" style="color: white !important"></i>
+                                <i :class="item.iconName" style="color: black !important"></i>
                                 <span slot="title">{{ item.itemName }}</span>
                             </template>
                             <el-menu-item-group>
@@ -35,7 +34,7 @@
                                 >
                                     <i
                                         :class="childItem.iconName"
-                                        style="color: white !important"
+                                        style="color: black !important"
                                     ></i>
                                     <span slot="title">
                                         {{ childItem.itemName }}
@@ -44,7 +43,7 @@
                             </el-menu-item-group>
                         </el-submenu>
                         <el-menu-item :index="item.id" :key="item.id + 'n'" v-if="item.childItem.length == 0">
-                            <i :class="item.iconName" style="color: white !important"></i>
+                            <i :class="item.iconName" style="color: black !important"></i>
                             <span slot="title">{{ item.itemName }}</span>
                         </el-menu-item>
                     </template>
@@ -76,7 +75,7 @@ export default {
     route,
     data() {
         return {
-            isCollapse: document.documentElement.clientWidth > 500,
+            isCollapse: document.documentElement.clientWidth > 700,
             naviItem: [
                 new Item('el-icon-user-solid', '个人中心'),
                 new Item('el-icon-s-home', '文章管理', [
@@ -93,7 +92,6 @@ export default {
                 new Item('el-icon-asuka-message', '留言板'),
                 new Item('el-icon-asuka-user', '用户管理'),
             ],
-            isloaded: false
         }
     },
     methods: {
@@ -105,12 +103,13 @@ export default {
         },
         goBack() {
             return true
+        },
+        listenWidth() {
+            this.isCollapse = document.documentElement.clientWidth > 700
         }
     },
-    mounted: function() {
-        window.addEventListener('resize', () => {
-            this.isCollapse = document.documentElement.clientHeight > 500
-        })
+    created: function() {
+        window.addEventListener('resize', this.listenWidth)
         for (let i = 0; i < this.naviItem.length; ++i) {
             let id = i + 1
             this.naviItem[i].id = id.toString()
@@ -119,7 +118,9 @@ export default {
                 this.naviItem[i].childItem[j].id = id.toString() + '-' + cid.toString()
             }
         }
-        this.isloaded = true
+    },
+    beforeDestroy: function() {
+        window.addEventListener('resize', this.listenWidth)
     }
 }
 </script>
@@ -161,28 +162,18 @@ export default {
     height: 100vh;
 }
 .el-aside {
-    background-image: linear-gradient(to bottom, #09203f 0%, #537895 125%);
+    background-image: linear-gradient(to top, #c1dfc4 0%, #deecdd 100%);
     min-height: 100vh;
 }
 .el-header {
     color: #333;
     text-align: center;
     line-height: 8vh;
-    background-image: linear-gradient(to right, #09203f 0%, #537895 100%);
+    background-image: linear-gradient(to top, #a3bded 0%, #6991c7 100%);
 }
 .el-main {
-    background-image: linear-gradient(160deg, #09203f 0%, #537895 100%);
+    background-color: #E9EEF3;
     color: #333;
     text-align: center;
-}
-</style>
-
-<style>
-.el-menu-item-group__title {
-    padding-top: 0;
-    padding-bottom: 0;
-}
-.el-scrollbar__wrap {
-    overflow-x: hidden;
 }
 </style>

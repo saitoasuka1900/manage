@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import ElementUI from 'element-ui'
 import store from './store'
+import '@/styles/index.scss'
 
 // 引用axios，并设置基础URL为后端服务api地址
 const axios = require('axios')

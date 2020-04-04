@@ -1,17 +1,10 @@
-.flex-set {
-    display: -webkit-flex;
-    display: flex;
+@mixin opacity-set($_alpha: 0, $_color: #000000) {
+    background-color: rgba($color: $_color, $alpha: $_alpha);
 }
-.el-menu-item-group__title {
-    padding-top: 0;
-    padding-bottom: 0;
-}
-.el-scrollbar__wrap {
-    overflow-x: hidden;
-}
-.el-dialog__body {
-    padding: 5px 25px !important;
-}
-.clear-set {
-    background-color: rgba($color: #000000, $alpha: 0);
+@mixin transition-set($speed: .2s) {
+    -webkit-transition: all $speed;
+    -moz-transition: all $speed;
+    -ms-transition: all $speed;
+    -o-transition: all $speed;
+    transition: all $speed;
 }

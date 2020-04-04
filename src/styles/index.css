@@ -1,0 +1,14 @@
+.flex-set {
+    display: -webkit-flex;
+    display: flex;
+}
+.el-menu-item-group__title {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.el-scrollbar__wrap {
+    overflow-x: hidden;
+}
+.el-dialog__body {
+    padding: 5px 25px !important;
+}

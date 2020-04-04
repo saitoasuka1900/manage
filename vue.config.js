@@ -111,5 +111,12 @@ module.exports = {
             }
         }
     },
-
+    css: {
+        loaderOptions: {
+            sass: {
+                prependData: `@import "@/styles/index.scss";`
+                // 会在每个style为scss的文件下导入该文件
+            }
+        }
+    }
 }

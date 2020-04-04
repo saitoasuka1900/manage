@@ -1,5 +1,7 @@
 <template>
-    <el-container>
+    <el-container
+        style="background-image: url('https://saitoasuka-1258793314.file.myqcloud.com/manage/index/index-bg.jpg')"
+    >
         <el-scrollbar>
             <el-aside
                 :width="isCollapse ? '205px' : '80px'"
@@ -10,20 +12,21 @@
                     <el-avatar :size="120" :src="require('assets/avatar.png')" />
                 </div>
                 <el-menu
-                    default-active="1"
+                    :default-active="this.$route.path"
+                    router
                     class="el-menu-vertical-demo"
                     @open="handleOpen"
                     @close="handleClose"
                     :collapse="!isCollapse"
                     background-color="rgba(0, 0, 0, 0)"
-                    text-color="black"
-                    active-text-color="red"
+                    text-color="white"
+                    active-text-color="#ffd04b"
                     :unique-opened="true"
                 >
                     <template v-for="item in naviItem">
                         <el-submenu :index="item.id" :key="item.id + 's'" v-if="item.childItem.length > 0">
                             <template slot="title">
-                                <i :class="item.iconName" style="color: black !important"></i>
+                                <i :class="item.iconName" style="color: white !important"></i>
                                 <span slot="title">{{ item.itemName }}</span>
                             </template>
                             <el-menu-item-group>
@@ -32,10 +35,7 @@
                                     :index="childItem.id"
                                     :key="childItem.id"
                                 >
-                                    <i
-                                        :class="childItem.iconName"
-                                        style="color: black !important"
-                                    ></i>
+                                    <i :class="childItem.iconName" style="color: white !important"></i>
                                     <span slot="title">
                                         {{ childItem.itemName }}
                                     </span>
@@ -43,7 +43,7 @@
                             </el-menu-item-group>
                         </el-submenu>
                         <el-menu-item :index="item.id" :key="item.id + 'n'" v-if="item.childItem.length == 0">
-                            <i :class="item.iconName" style="color: black !important"></i>
+                            <i :class="item.iconName" style="color: white !important"></i>
                             <span slot="title">{{ item.itemName }}</span>
                         </el-menu-item>
                     </template>
@@ -51,9 +51,10 @@
             </el-aside>
         </el-scrollbar>
         <el-container>
-            <el-header :height="'8vh'"/>
-            <el-main :height="'92vh'">
-                <router-view />
+            <el-main :height="'100vh'">
+                <transition name="index-main-view" mode="out-in">
+                    <router-view />
+                </transition>
             </el-main>
         </el-container>
     </el-container>
@@ -63,10 +64,10 @@
 import 'assets/icon/font_icon_navigate/iconfont.css'
 import route from '@/router/index'
 
-function Item(iconName, itemName, childItem = []) {
+function Item(iconName, itemName, id, childItem = []) {
     this.iconName = iconName
     this.itemName = itemName
-    this.id = ''
+    this.id = id
     if (typeof childItem === 'undefined') this.childItem = []
     else this.childItem = childItem.slice(0)
 }
@@ -77,21 +78,19 @@ export default {
         return {
             isCollapse: document.documentElement.clientWidth > 700,
             naviItem: [
-                new Item('el-icon-user-solid', '个人中心'),
-                new Item('el-icon-s-home', '文章管理', [
-                    new Item('el-icon-notebook-1', '博文管理'),
-                    new Item('el-icon-notebook-2', '日记管理'),
+                new Item('el-icon-user-solid', '个人中心', '/'),
+                new Item('el-icon-s-home', '博客管理', 'blog', [
+                    new Item('el-icon-notebook-1', '文章管理', '/post'),
+                    new Item('el-icon-takeaway-box', '草稿箱', '/draft')
                 ]),
-                new Item('el-icon-takeaway-box', '草稿箱'),
-                new Item('el-icon-asuka-announce', '公告设置'),
-                new Item('el-icon-s-grid', '分类管理', [
-                    new Item('el-icon-asuka-class', '类别管理'),
-                    new Item('el-icon-asuka-label', '标签管理'),
+                new Item('el-icon-asuka-message', '留言板', '/message'),
+                new Item('el-icon-s-grid', '分类管理', 'catagory', [
+                    new Item('el-icon-asuka-class', '类别管理', '/class'),
+                    new Item('el-icon-asuka-label', '标签管理', '/label')
                 ]),
-                new Item('el-icon-chat-dot-round', '评论管理'),
-                new Item('el-icon-asuka-message', '留言板'),
-                new Item('el-icon-asuka-user', '用户管理'),
-            ],
+                new Item('el-icon-asuka-user', '用户管理', '/user-manage'),
+                new Item('el-icon-chat-dot-round', '评论管理', '/comment-manage')
+            ]
         }
     },
     methods: {
@@ -110,35 +109,37 @@ export default {
     },
     created: function() {
         window.addEventListener('resize', this.listenWidth)
-        for (let i = 0; i < this.naviItem.length; ++i) {
-            let id = i + 1
-            this.naviItem[i].id = id.toString()
-            for (let j = 0; j < this.naviItem[i].childItem.length; ++j) {
-                let cid = j + 1
-                this.naviItem[i].childItem[j].id = id.toString() + '-' + cid.toString()
-            }
-        }
     },
     beforeDestroy: function() {
-        window.addEventListener('resize', this.listenWidth)
+        window.removeEventListener('resize', this.listenWidth)
     }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .transition-set-slow {
-    -webkit-transition: all 0.6s;
-    -moz-transition: all 0.6s;
-    -ms-transition: all 0.6s;
-    -o-transition: all 0.6s;
-    transition: all 0.6s;
+    @include transition-set(0.6s);
 }
 .transition-set-fast {
-    -webkit-transition: all 0.2s;
-    -moz-transition: all 0.2s;
-    -ms-transition: all 0.2s;
-    -o-transition: all 0.2s;
-    transition: all 0.2s;
+    @include transition-set(0.2s);
+}
+.el-aside {
+    @include opacity-set(0.4);
+    min-height: 100vh;
+}
+.el-main {
+    @include opacity-set(0);
+    color: #333;
+    text-align: center;
+    padding: 3vh;
+}
+</style>
+
+<style scoped>
+.el-container {
+    background-size: cover;
+    background-position: 100%;
+    background-repeat: no-repeat;
 }
 .el-menu-vertical-demo:not(.el-menu--collapse) {
     width: 200px;
@@ -161,19 +162,16 @@ export default {
 .el-scrollbar {
     height: 100vh;
 }
-.el-aside {
-    background-image: linear-gradient(to top, #c1dfc4 0%, #deecdd 100%);
-    min-height: 100vh;
+.index-main-view-enter,
+.index-main-view-leave-to {
+    opacity: 0;
 }
-.el-header {
-    color: #333;
-    text-align: center;
-    line-height: 8vh;
-    background-image: linear-gradient(to top, #a3bded 0%, #6991c7 100%);
+.index-main-view-enter-active,
+.index-main-view-leave-active {
+    transition: all 1s;
 }
-.el-main {
-    background-color: #E9EEF3;
-    color: #333;
-    text-align: center;
+.index-main-view-enter-to,
+.index-main-view-leave {
+    opacity: 1;
 }
 </style>

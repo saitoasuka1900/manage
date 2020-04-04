@@ -19,7 +19,35 @@ const routes = [
                 path: "user",
                 component: () => import("components/items/user"),
                 alias: "",
-            }
+            },
+            {
+                path: "post",
+                component: () => import("components/items/post"),
+            },
+            {
+                path: "draft",
+                component: () => import("components/items/user"),
+            },
+            {
+                path: "message",
+                component: () => import("components/items/user"),
+            },
+            {
+                path: "class",
+                component: () => import("components/items/user"),
+            },
+            {
+                path: "label",
+                component: () => import("components/items/user"),
+            },
+            {
+                path: "user-manage",
+                component: () => import("components/items/user"),
+            },
+            {
+                path: "comment-manage",
+                component: () => import("components/items/user"),
+            },
         ],
     },
     {

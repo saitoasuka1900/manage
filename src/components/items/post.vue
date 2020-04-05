@@ -1,109 +1,192 @@
 <template>
-    <div style="height: 94vh; width: 100%;">
-        <el-scrollbar style="height: 94vh; width: 100%; color: white; text-align: center;">
-            <table style="width: 100%; text-align: center; height: 80%;">
-                <tr>
-                    <th>
-                        标题
-                    </th>
-                    <th>
-                        发布时间
-                    </th>
-                    <th>
-                        类别
-                    </th>
-                    <th>
-                        标签
-                    </th>
-                    <th>
-                        操作
-                    </th>
-                </tr>
-                <tr v-for="elem in post_info" :key="elem.title">
-                    <th>{{ elem.title }}</th>
-                    <th>{{ elem.time }}</th>
-                    <th>{{ elem._class }}</th>
-                    <th>{{ elem.label }}</th>
-                    <th>
-                        <el-button style="font-size: 0.9rem; padding: 3px 0" type="text">编辑</el-button>
-                        <el-button style="font-size: 0.9rem; padding: 3px 0" type="text">删除</el-button>
-                    </th>
-                </tr>
-            </table>
-        </el-scrollbar>
+    <div>
+        <el-dialog title="提示" :visible.sync="edit_control" width="30%">
+            <span>是否打开并编辑文章 {{ focus_row_title }}({{ focus_row_time }})</span>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="edit_control = false">取 消</el-button>
+                <el-button type="primary" @click="excute('edit')">确 定</el-button>
+            </span>
+        </el-dialog>
+        <el-dialog title="提示" :visible.sync="delete_control" width="30%">
+            <span>是否删除文章 {{ focus_row_title }}({{ focus_row_time }})</span>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="delete_control = false">取 消</el-button>
+                <el-button type="primary" @click="excute('delete')">确 定</el-button>
+            </span>
+        </el-dialog>
+        <el-table
+            :data="post_info"
+            height="86vh"
+            :highlight-current-row="false"
+            style="max-width: 100%;"
+            v-loading="loading"
+            element-loading-text="拼命加载中"
+            element-loading-background="rgba(0, 0, 0, .6)"
+        >
+            <el-table-column min-width="100" prop="title" label="标题" align="center"></el-table-column>
+            <el-table-column prop="time" label="发布时间" width="160" align="center"></el-table-column>
+            <el-table-column prop="_class" label="类别" width="100" align="center"></el-table-column>
+            <el-table-column prop="label" label="标签" align="center"></el-table-column>
+            <el-table-column prop="comment" label="评论数" width="90" align="center"></el-table-column>
+            <el-table-column label="操作" width="90" align="center">
+                <template slot-scope="scope">
+                    <el-button @click="runClick(scope.row, 'edit')" type="text" size="small">编辑</el-button>
+                    <el-button @click="runClick(scope.row, 'delete')" type="text" size="small">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+            :small="small"
+            @current-change="handleCurrentChange"
+            current-page.sync="1"
+            :page-size="15"
+            layout="prev, pager, next"
+            :total="postToT"
+        ></el-pagination>
     </div>
 </template>
 
 <script>
-function Post(title, time, _class, label) {
+function Post(id, title, time, _class, label, comment) {
+    this.id = id
     this.title = title
     this.time = time
     this._class = _class
     this.label = label
+    this.comment = comment
+    this.delete_control = false
 }
 
 export default {
     data() {
         return {
-            post_info: []
+            post_info: [],
+            loading: true,
+            edit_control: false,
+            delete_control: false,
+            focus_row_title: '',
+            focus_row_time: '',
+            focus_row_id: 0,
+            pageId: Number(this.$route.params.id),
+            postToT: 500,
+            small: document.documentElement.clientWidth < 600,
         }
     },
     methods: {
-        getPost() {
+        getPost(type = '') {
             this.$axios
-                .post('/manage/getUserInfo')
+                .post('/manage/excutePost', {
+                    pageSize: 15,
+                    pageId: this.pageId,
+                    type: type,
+                    postId: type === '' ? -1 : this.focus_row_id
+                })
                 .then((successRespone) => {
                     this.responseResult = JSON.stringify(successRespone.data)
-                    if (successRespone.data.code === 200) this.user_info = JSON.parse(successRespone.data)
+                    if (successRespone.data.code === 200) {
+                        this.user_info.length = 0
+                        this.user_info = JSON.parse(successRespone.data)
+                    }
+                    this.loading = false
                 })
                 .catch((failRespone) => {
-                    console.log('Get Info failed')
-                    return failRespone
+                    console.log(failRespone)
+                    this.loading = false
                 })
+        },
+        runClick(row, type) {
+            this.focus_row_title = row.title
+            this.focus_row_time = row.time
+            this.focus_row_id = row.id
+            if (type === 'edit') this.edit_control = true
+            else this.delete_control = true
+        },
+        excute(type) {
+            if (type === 'edit') this.edit_control = false
+            else this.delete_control = false
+            if (type === 'edit' || isNaN(this.focus_row_id)) return
+            this.loading = true
+            this.getPost(type)
+        },
+        handleCurrentChange(val) {
+            this.loading = true
+            this.pageId = val
+            this.getPost()
+        },
+        listenWidth() {
+            this.small = document.documentElement.clientWidth < 600
         }
     },
     created: function() {
-        this.post_info.push(new Post('dasdasdasdioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasdsadsaioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasisadsadoj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dassadasdsaioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasdasdsioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('daasdasdsasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dadsadsasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasdasddioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfa dasdaw wad awdaw dpoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasasdasdioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasidsadasoj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
-        this.post_info.push(new Post('dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija'))
+        this.post_info.push(new Post(1, 'dasdasdasdioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 32))
+        this.post_info.push(new Post(2, 'dasdsadsaioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 31))
+        this.post_info.push(new Post(3, 'dasisadsadoj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 1))
+        this.post_info.push(new Post(4, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 100))
+        this.post_info.push(new Post(5, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
+        this.post_info.push(new Post(6, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
+        this.post_info.push(new Post(7, 'daasdasdsasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
+        this.post_info.push(new Post(8, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
+        this.post_info.push(new Post(9, 'dadsadsasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
+        this.post_info.push(new Post(10, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
+        this.post_info.push(
+            new Post(11, 'dasdasddioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfa dasdaw wad awdaw dpoiejf aija', 23)
+        )
+        this.getPost()
+        window.addEventListener('resize', this.listenWidth)
+    },
+    beforeDestroy: function() {
+        window.removeEventListener('resize', this.listenWidth)
     }
 }
 </script>
 
-<style lang="scss" scoped>
-th {
+<style lang="scss" deep>
+el-table-column {
     @include opacity-set(0.4);
     text-align: center;
     line-height: 100%;
     min-width: 30px;
     padding: 2vh 0;
 }
+.el-table__body-wrapper::-webkit-scrollbar {
+    width: 6px; // 横向滚动条
+    height: 6px; // 纵向滚动条 必写
+}
+// 滚动条的滑块
+.el-table__body-wrapper::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 3px;
+}
 </style>
 
-<style scoped>
+<style deep>
 tr {
     height: 5vh;
     width: 100%;
+}
+.el-table {
+    background-color: rgba(0, 0, 0, 0.4);
+    min-width: 0;
+}
+.el-table th,
+.el-table tr {
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+}
+.el-table--enable-row-hover .el-table__body tr:hover > td {
+    background-color: #374255 !important;
+}
+.el-pagination {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+.el-pagination ul li,
+.el-pagination .btn-next,
+.el-pagination .btn-prev,
+.el-pager li.btn-quicknext,
+.el-pager li.btn-quickprev,
+.el-pagination button:disabled,
+.el-pagination__jump {
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
 }
 </style>

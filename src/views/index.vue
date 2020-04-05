@@ -2,7 +2,7 @@
     <el-container
         style="background-image: url('https://saitoasuka-1258793314.file.myqcloud.com/manage/index/index-bg.jpg')"
     >
-        <el-scrollbar>
+        <el-scrollbar :style="{minWidth: isCollapse ? '205px' : '80px'}">
             <el-aside
                 :width="isCollapse ? '205px' : '80px'"
                 :class="!isCollapse ? 'transition-set-slow' : 'transition-set-fast'"
@@ -80,8 +80,8 @@ export default {
             naviItem: [
                 new Item('el-icon-user-solid', '个人中心', '/'),
                 new Item('el-icon-s-home', '博客管理', 'blog', [
-                    new Item('el-icon-notebook-1', '文章管理', '/post'),
-                    new Item('el-icon-takeaway-box', '草稿箱', '/draft')
+                    new Item('el-icon-notebook-1', '文章管理', '/post/1'),
+                    new Item('el-icon-takeaway-box', '草稿箱', '/draft/1')
                 ]),
                 new Item('el-icon-asuka-message', '留言板', '/message'),
                 new Item('el-icon-s-grid', '分类管理', 'catagory', [
@@ -173,5 +173,11 @@ export default {
 .index-main-view-enter-to,
 .index-main-view-leave {
     opacity: 1;
+}
+</style>
+
+<style deep>
+.el-scrollbar__view {
+    min-width: 80px;
 }
 </style>

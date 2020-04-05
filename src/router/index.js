@@ -21,11 +21,11 @@ const routes = [
                 alias: "",
             },
             {
-                path: "post",
+                path: "post/:id?",
                 component: () => import("components/items/post"),
             },
             {
-                path: "draft",
+                path: "draft/:id?",
                 component: () => import("components/items/user"),
             },
             {

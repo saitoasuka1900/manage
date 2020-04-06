@@ -84,9 +84,10 @@ export default {
                     new Item('el-icon-takeaway-box', '草稿箱', '/draft')
                 ]),
                 new Item('el-icon-asuka-message', '留言板', '/message'),
-                new Item('el-icon-s-grid', '分类管理', 'catagory', [
-                    new Item('el-icon-asuka-class', '类别管理', '/class'),
-                    new Item('el-icon-asuka-label', '标签管理', '/label')
+                new Item('el-icon-s-grid', '标签管理', 'label', [
+                    new Item('el-icon-asuka-algorithm', '算法', '/algorithm'),
+                    new Item('el-icon-asuka-development', '开发', '/development'),
+                    new Item('el-icon-asuka-other', '其他', '/other'),
                 ]),
                 new Item('el-icon-asuka-user', '用户管理', '/user-manage'),
                 new Item('el-icon-chat-dot-round', '评论管理', '/comment-manage')

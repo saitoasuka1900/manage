@@ -6,18 +6,32 @@
   "description": "",
   "glyphs": [
     {
-      "icon_id": "845776",
-      "name": "标签",
-      "font_class": "-label",
-      "unicode": "e63e",
-      "unicode_decimal": 58942
+      "icon_id": "8497560",
+      "name": "算法库",
+      "font_class": "-algorithm",
+      "unicode": "e63a",
+      "unicode_decimal": 58938
     },
     {
-      "icon_id": "8094198",
-      "name": "类别",
-      "font_class": "-class",
-      "unicode": "e649",
-      "unicode_decimal": 58953
+      "icon_id": "10109066",
+      "name": "写",
+      "font_class": "-write",
+      "unicode": "e60f",
+      "unicode_decimal": 58895
+    },
+    {
+      "icon_id": "11459727",
+      "name": "开发商",
+      "font_class": "-development",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    },
+    {
+      "icon_id": "13106274",
+      "name": "其他",
+      "font_class": "-other",
+      "unicode": "e60b",
+      "unicode_decimal": 58891
     },
     {
       "icon_id": "9924716",
@@ -32,13 +46,6 @@
       "font_class": "-user",
       "unicode": "e603",
       "unicode_decimal": 58883
-    },
-    {
-      "icon_id": "5809175",
-      "name": "公告",
-      "font_class": "-announce",
-      "unicode": "e688",
-      "unicode_decimal": 59016
     }
   ]
 }

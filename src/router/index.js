@@ -38,12 +38,16 @@ const routes = [
                 component: () => import("components/items/message"),
             },
             {
-                path: "class",
-                component: () => import("components/items/user"),
+                path: "algorithm",
+                component: () => import("components/items/label"),
             },
             {
-                path: "label",
-                component: () => import("components/items/user"),
+                path: "development",
+                component: () => import("components/items/label"),
+            },
+            {
+                path: "other",
+                component: () => import("components/items/label"),
             },
             {
                 path: "user-manage",

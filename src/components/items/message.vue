@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-dialog title="提示" :visible.sync="delete_control" :width="small ? '70%' : '30%'">
+        <el-dialog title="删除留言" :visible.sync="delete_control" :width="small ? '70%' : '30%'" :close-on-click-modal='false'>
             <p>是否删除用户 {{ focus_row_from }} 的留言：{{ focus_row_content }}</p>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delete_control = false">取 消</el-button>
@@ -22,7 +22,7 @@
             <el-table-column prop="time" label="留言时间" width="160" align="center"></el-table-column>
             <el-table-column label="操作" width="90" align="center">
                 <template slot-scope="scope">
-                    <el-button @click="runClick(scope.row)" type="text" size="small">删除</el-button>
+                    <el-button @click="runClick(scope.row)" type="text" size="medium">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -54,6 +54,7 @@ export default {
             delete_control: false,
             focus_row_content: '',
             focus_row_from: '',
+            focus_row_id: 0,
             pageId: 1,
             messageToT: 500,
             small: document.documentElement.clientWidth < 600
@@ -85,6 +86,7 @@ export default {
         runClick(row) {
             this.focus_row_content = row.content
             this.focus_row_from = row.from
+            this.focus_row_id = row.id
             this.delete_control = true
         },
         excute() {

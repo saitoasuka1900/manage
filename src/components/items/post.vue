@@ -1,13 +1,13 @@
 <template>
     <div>
-        <el-dialog title="提示" :visible.sync="edit_control" :width="small ? '70%' : '30%'">
+        <el-dialog title="编辑文章" :visible.sync="edit_control" :width="small ? '70%' : '30%'" :close-on-click-modal='false'>
             <span>是否打开并编辑文章 {{ focus_row_title }}({{ focus_row_time }})</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="edit_control = false">取 消</el-button>
                 <el-button type="primary" @click="excute('edit')">确 定</el-button>
             </span>
         </el-dialog>
-        <el-dialog title="提示" :visible.sync="delete_control" :width="small ? '70%' : '30%'">
+        <el-dialog title="删除文章" :visible.sync="delete_control" :width="small ? '70%' : '30%'" :close-on-click-modal='false'>
             <span>是否删除文章 {{ focus_row_title }}({{ focus_row_time }})</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delete_control = false">取 消</el-button>
@@ -25,13 +25,13 @@
         >
             <el-table-column min-width="100" prop="title" label="标题" align="center"></el-table-column>
             <el-table-column prop="time" label="发布时间" width="160" align="center"></el-table-column>
-            <el-table-column prop="_class" label="类别" width="100" align="center"></el-table-column>
+            <el-table-column prop="_class" label="所属" width="100" align="center"></el-table-column>
             <el-table-column prop="label" label="标签" align="center"></el-table-column>
             <el-table-column prop="comment" label="评论数" width="90" align="center"></el-table-column>
-            <el-table-column label="操作" width="90" align="center">
+            <el-table-column label="操作" width="100" align="center">
                 <template slot-scope="scope">
-                    <el-button @click="runClick(scope.row, 'edit')" type="text" size="small">编辑</el-button>
-                    <el-button @click="runClick(scope.row, 'delete')" type="text" size="small">删除</el-button>
+                    <el-button @click="runClick(scope.row, 'edit')" type="text" size="medium">编辑</el-button>
+                    <el-button @click="runClick(scope.row, 'delete')" type="text" size="medium">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -140,6 +140,7 @@ export default {
     watch: {
         $route (to) {
             this.where = to.path.split('/')[1]
+            this.loading = true
             this.getPost()
         }
     },

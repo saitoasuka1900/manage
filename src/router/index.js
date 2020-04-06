@@ -11,6 +11,11 @@ VueRouter.prototype.push = function push(location) {
 
 const routes = [
     {
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/login'),
+    },
+    {
         path: '/',
         name: 'index',
         component: () => import('@/views/index'),
@@ -21,16 +26,16 @@ const routes = [
                 alias: "",
             },
             {
-                path: "post/:id?",
+                path: "post",
                 component: () => import("components/items/post"),
             },
             {
-                path: "draft/:id?",
-                component: () => import("components/items/user"),
+                path: "draft",
+                component: () => import("components/items/post"),
             },
             {
                 path: "message",
-                component: () => import("components/items/user"),
+                component: () => import("components/items/message"),
             },
             {
                 path: "class",
@@ -48,13 +53,12 @@ const routes = [
                 path: "comment-manage",
                 component: () => import("components/items/user"),
             },
+            {
+                path: "*",
+                component: () => import("components/items/404"),
+            },
         ],
     },
-    {
-        path: '/login',
-        name: 'login',
-        component: () => import('@/views/login'),
-    }
 ]
 
 const router = new VueRouter({

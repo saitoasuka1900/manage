@@ -1,13 +1,13 @@
 <template>
     <div>
-        <el-dialog title="提示" :visible.sync="edit_control" width="30%">
+        <el-dialog title="提示" :visible.sync="edit_control" :width="small ? '70%' : '30%'">
             <span>是否打开并编辑文章 {{ focus_row_title }}({{ focus_row_time }})</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="edit_control = false">取 消</el-button>
                 <el-button type="primary" @click="excute('edit')">确 定</el-button>
             </span>
         </el-dialog>
-        <el-dialog title="提示" :visible.sync="delete_control" width="30%">
+        <el-dialog title="提示" :visible.sync="delete_control" :width="small ? '70%' : '30%'">
             <span>是否删除文章 {{ focus_row_title }}({{ focus_row_time }})</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delete_control = false">取 消</el-button>
@@ -42,6 +42,7 @@
             :page-size="15"
             layout="prev, pager, next"
             :total="postToT"
+            hideOnSinglePage
         ></el-pagination>
     </div>
 </template>
@@ -54,7 +55,6 @@ function Post(id, title, time, _class, label, comment) {
     this._class = _class
     this.label = label
     this.comment = comment
-    this.delete_control = false
 }
 
 export default {
@@ -67,15 +67,17 @@ export default {
             focus_row_title: '',
             focus_row_time: '',
             focus_row_id: 0,
-            pageId: Number(this.$route.params.id),
+            pageId: 1,
             postToT: 500,
             small: document.documentElement.clientWidth < 600,
+            where: this.$route.path.split('/')[1],
         }
     },
     methods: {
         getPost(type = '') {
             this.$axios
                 .post('/manage/excutePost', {
+                    where: this.where,
                     pageSize: 15,
                     pageId: this.pageId,
                     type: type,
@@ -84,8 +86,9 @@ export default {
                 .then((successRespone) => {
                     this.responseResult = JSON.stringify(successRespone.data)
                     if (successRespone.data.code === 200) {
-                        this.user_info.length = 0
-                        this.user_info = JSON.parse(successRespone.data)
+                        this.post_info.length = 0
+                        this.postToT = JSON.parse(successRespone.data.postToT)
+                        this.post_info = JSON.parse(successRespone.data.info)
                     }
                     this.loading = false
                 })
@@ -134,6 +137,12 @@ export default {
         this.getPost()
         window.addEventListener('resize', this.listenWidth)
     },
+    watch: {
+        $route (to) {
+            this.where = to.path.split('/')[1]
+            this.getPost()
+        }
+    },
     beforeDestroy: function() {
         window.removeEventListener('resize', this.listenWidth)
     }
@@ -149,8 +158,8 @@ el-table-column {
     padding: 2vh 0;
 }
 .el-table__body-wrapper::-webkit-scrollbar {
-    width: 6px; // 横向滚动条
-    height: 6px; // 纵向滚动条 必写
+    width: 6px; // 纵向滚动条
+    height: 8px; // 横向滚动条
 }
 // 滚动条的滑块
 .el-table__body-wrapper::-webkit-scrollbar-thumb {

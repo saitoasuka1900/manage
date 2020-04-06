@@ -70,6 +70,7 @@ export default {
 
 <style scoped>
 p {
+    display: -webkit-box;
     word-break: break-word;
     overflow: hidden;
     text-overflow: ellipsis;

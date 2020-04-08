@@ -39,7 +39,24 @@ export default {
     },
     methods: {
         Login() {
-            alert('1')
+            if (this.username === '' || this.password === '') {
+                alert('用户名或密码为空')
+                return
+            }
+            this.$axios
+                .post('/manage/Login', {
+                    username: this.username,
+                    password: this.password,
+                })
+                .then((successRespone) => {
+                    let responseResult = JSON.parse(successRespone.data)
+                    console.log(responseResult)
+                    alert('登陆成功')
+                })
+                .catch((failRespone) => {
+                    alert('登录失败')
+                    return failRespone
+                })
         },
         listenWidth() {
             this.bgurl =

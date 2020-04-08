@@ -81,11 +81,10 @@ export default {
                     newName: type === 'edit' ? this.input_name : ''
                 })
                 .then((successRespone) => {
-                    this.responseResult = JSON.stringify(successRespone.data)
-                    if (successRespone.data.code === 200) {
-                        this.label_info.length = 0
-                        this.label_info = JSON.parse(successRespone.data)
-                    }
+                    let responseResult = JSON.parse(successRespone.data)
+                    console.log(responseResult)
+                    this.label_info.length = 0
+                    this.label_info = responseResult.label_info.slice
                     if (type === 'edit') {
                         this.label_info[this.focus_row].name = this.input_name
                         this.input_name = ''

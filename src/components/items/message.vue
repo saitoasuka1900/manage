@@ -70,11 +70,12 @@ export default {
                     messageId: type === '' ? -1 : this.focus_row_id
                 })
                 .then((successRespone) => {
-                    this.responseResult = JSON.stringify(successRespone.data)
+                    let responseResult = JSON.parse(successRespone.data)
+                    console.log(responseResult)
                     if (successRespone.data.code === 200) {
                         this.message_info.length = 0
-                        this.messageToT = JSON.parse(successRespone.data.messageToT)
-                        this.message_info = JSON.parse(successRespone.data.info)
+                        this.messageToT = responseResult.messageToT
+                        this.message_info = responseResult.message_info
                     }
                     this.loading = false
                 })

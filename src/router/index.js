@@ -26,6 +26,18 @@ const routes = [
                 alias: "",
             },
             {
+                path: "write",
+                component: () => import("components/items/write"),
+            },
+            {
+                path: "write/post/:id",
+                component: () => import("components/items/write"),
+            },
+            {
+                path: "write/draft/:id",
+                component: () => import("components/items/write"),
+            },
+            {
                 path: "post",
                 component: () => import("components/items/post"),
             },

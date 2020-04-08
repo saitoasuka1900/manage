@@ -84,12 +84,11 @@ export default {
                     postId: type === '' ? -1 : this.focus_row_id
                 })
                 .then((successRespone) => {
-                    this.responseResult = JSON.stringify(successRespone.data)
-                    if (successRespone.data.code === 200) {
-                        this.post_info.length = 0
-                        this.postToT = JSON.parse(successRespone.data.postToT)
-                        this.post_info = JSON.parse(successRespone.data.info)
-                    }
+                    let responseResult = JSON.parse(successRespone.data)
+                    console.log(responseResult)
+                    this.post_info.length = 0
+                    this.postToT = responseResult.postToT
+                    this.post_info = responseResult.post_info
                     this.loading = false
                 })
                 .catch((failRespone) => {
@@ -107,7 +106,13 @@ export default {
         excute(type) {
             if (type === 'edit') this.edit_control = false
             else this.delete_control = false
-            if (type === 'edit' || isNaN(this.focus_row_id)) return
+            if (type === 'edit' || isNaN(this.focus_row_id)) {
+                if (isNaN(this.focus_row_id))
+                    return
+                let path = '/write/' + this.where + '/' + this.focus_row_id.toString()
+                this.$router.push({ path: path })
+                return
+            }
             this.loading = true
             this.getPost(type)
         },

@@ -42,8 +42,9 @@ export default {
         this.$axios
             .post('/manage/getUserInfo')
             .then((successRespone) => {
-                this.responseResult = JSON.stringify(successRespone.data)
-                if (successRespone.data.code === 200) this.user_info = JSON.parse(successRespone.data)
+                let responseResult = JSON.parse(successRespone.data)
+                console.log(responseResult)
+                this.user_info = responseResult.user_info
             })
             .catch((failRespone) => {
                 console.log('Get Info failed')

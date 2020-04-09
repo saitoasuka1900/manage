@@ -13,7 +13,7 @@ const routes = [
     {
         path: '/login',
         name: 'login',
-        component: () => import('@/views/login'),
+        component: () => import('@/views/login')
     },
     {
         path: '/',
@@ -21,60 +21,44 @@ const routes = [
         component: () => import('@/views/index'),
         children: [
             {
-                path: "user",
-                component: () => import("components/items/user"),
-                alias: "",
+                path: 'user',
+                component: () => import('components/items/user'),
+                alias: ''
             },
             {
-                path: "write",
-                component: () => import("components/items/write"),
+                path: 'write',
+                component: () => import('components/items/write')
             },
             {
-                path: "write/post/:id",
-                component: () => import("components/items/write"),
+                path: 'write/(post|draft)/:id(\\d+)', // this route will only be matched if :id is all numbers
+                component: () => import('components/items/write')
             },
             {
-                path: "write/draft/:id",
-                component: () => import("components/items/write"),
+                path: '(post|draft)',
+                component: () => import('components/items/post')
             },
             {
-                path: "post",
-                component: () => import("components/items/post"),
+                path: 'message',
+                component: () => import('components/items/message')
             },
             {
-                path: "draft",
-                component: () => import("components/items/post"),
+                path: '(algorithm|development|other)',
+                component: () => import('components/items/label')
             },
             {
-                path: "message",
-                component: () => import("components/items/message"),
+                path: 'user-manage',
+                component: () => import('components/items/user')
             },
             {
-                path: "algorithm",
-                component: () => import("components/items/label"),
+                path: 'comment-manage',
+                component: () => import('components/items/user')
             },
             {
-                path: "development",
-                component: () => import("components/items/label"),
-            },
-            {
-                path: "other",
-                component: () => import("components/items/label"),
-            },
-            {
-                path: "user-manage",
-                component: () => import("components/items/user"),
-            },
-            {
-                path: "comment-manage",
-                component: () => import("components/items/user"),
-            },
-            {
-                path: "*",
-                component: () => import("components/items/404"),
-            },
-        ],
-    },
+                path: '*',
+                component: () => import('components/items/404')
+            }
+        ]
+    }
 ]
 
 const router = new VueRouter({

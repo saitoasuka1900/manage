@@ -70,7 +70,8 @@ export default {
                 { label: '开发', value: 2 },
                 { label: '其他', value: 3 }
             ],
-            label: []
+            label: [],
+            loadingInstance: ''
         }
     },
     methods: {
@@ -87,10 +88,10 @@ export default {
                     alert('未选择文章类型')
                     return
                 }
-                if (this.value === '') {
-                    alert('文章内容为空')
-                    return
-                }
+            }
+            if (this.value === '') {
+                alert('文章内容为空')
+                return
             }
             this.$axios
                 .post('/manage/submit_post', {
@@ -142,8 +143,10 @@ export default {
                     this.label = responseResult.label.slice()
                     this.description = responseResult.description
                     this.content = responseResult.content
+                    this.loadingInstance.close()
                 })
                 .catch((failRespone) => {
+                    this.loadingInstance.close()
                     alert('获取失败')
                     return failRespone
                 })
@@ -160,6 +163,7 @@ export default {
             this.content = Content()
             return
         }
+        this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
         this.getPost()
     },
     watch: {
@@ -174,10 +178,27 @@ export default {
                 this.content = Content()
                 return
             }
+            this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
             this.getPost()
         },
         catagory(to) {
             this.getLabel(to)
+        }
+    },
+    beforeRouteLeave(to, from, next) {
+        const answer = window.confirm('当前页面数据未保存，确定要离开？')
+        if (answer) {
+            next()
+        } else {
+            next(false)
+        }
+    },
+    beforeRouteUpdate(to, from, next) {
+        const answer = window.confirm('当前页面数据未保存，确定要离开？')
+        if (answer) {
+            next()
+        } else {
+            next(false)
         }
     }
 }

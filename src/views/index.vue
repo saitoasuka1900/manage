@@ -2,7 +2,7 @@
     <el-container
         style="background-image: url('https://saitoasuka-1258793314.file.myqcloud.com/manage/index/index-bg.jpg')"
     >
-        <el-scrollbar :style="{minWidth: isCollapse ? '205px' : '80px'}">
+        <el-scrollbar :style="{ minWidth: isCollapse ? '205px' : '80px' }">
             <el-aside
                 :width="isCollapse ? '205px' : '80px'"
                 :class="!isCollapse ? 'transition-set-slow' : 'transition-set-fast'"
@@ -12,7 +12,6 @@
                     <el-avatar :size="120" :src="require('assets/avatar.png')" />
                 </div>
                 <el-menu
-                    :default-active="this.$route.path"
                     router
                     class="el-menu-vertical-demo"
                     @open="handleOpen"
@@ -20,14 +19,16 @@
                     :collapse="!isCollapse"
                     background-color="rgba(0, 0, 0, 0)"
                     text-color="white"
-                    active-text-color="#ffd04b"
+                    active-text-color="white"
                     :unique-opened="true"
                 >
                     <template v-for="item in naviItem">
                         <el-submenu :index="item.id" :key="item.id + 's'" v-if="item.childItem.length > 0">
                             <template slot="title">
                                 <i :class="item.iconName" style="color: white !important"></i>
-                                <span slot="title">{{ item.itemName }}</span>
+                                <span slot="title">
+                                    {{ item.itemName }}
+                                </span>
                             </template>
                             <el-menu-item-group>
                                 <el-menu-item
@@ -36,7 +37,7 @@
                                     :key="childItem.id"
                                 >
                                     <i :class="childItem.iconName" style="color: white !important"></i>
-                                    <span slot="title">
+                                    <span slot="title" :class="{ 'is-active2': onRoutes === childItem.id }">
                                         {{ childItem.itemName }}
                                     </span>
                                 </el-menu-item>
@@ -44,7 +45,9 @@
                         </el-submenu>
                         <el-menu-item :index="item.id" :key="item.id + 'n'" v-if="item.childItem.length == 0">
                             <i :class="item.iconName" style="color: white !important"></i>
-                            <span slot="title">{{ item.itemName }}</span>
+                            <span slot="title" :class="{ 'is-active2': onRoutes === item.id }">
+                                {{ item.itemName }}
+                            </span>
                         </el-menu-item>
                     </template>
                 </el-menu>
@@ -82,13 +85,13 @@ export default {
                 new Item('el-icon-s-home', '博客管理', 'blog', [
                     new Item('el-icon-asuka-write', '写文章', '/write'),
                     new Item('el-icon-notebook-1', '文章管理', '/post'),
-                    new Item('el-icon-takeaway-box', '草稿箱', '/draft'),
+                    new Item('el-icon-takeaway-box', '草稿箱', '/draft')
                 ]),
                 new Item('el-icon-asuka-message', '留言板', '/message'),
                 new Item('el-icon-s-grid', '标签管理', 'label', [
                     new Item('el-icon-asuka-algorithm', '算法', '/algorithm'),
                     new Item('el-icon-asuka-development', '开发', '/development'),
-                    new Item('el-icon-asuka-other', '其他', '/other'),
+                    new Item('el-icon-asuka-other', '其他', '/other')
                 ]),
                 new Item('el-icon-asuka-user', '用户管理', '/user-manage'),
                 new Item('el-icon-chat-dot-round', '评论管理', '/comment-manage')
@@ -107,6 +110,11 @@ export default {
         },
         listenWidth() {
             this.isCollapse = document.documentElement.clientWidth > 700
+        }
+    },
+    computed: {
+        onRoutes() {
+            return this.$route.path
         }
     },
     created: function() {
@@ -138,6 +146,9 @@ export default {
 </style>
 
 <style scoped>
+.is-active2 {
+    color: #ffd04b !important;
+}
 .el-container {
     background-size: cover;
     background-position: 100%;

@@ -3,11 +3,7 @@
 </template>
 
 <script>
-import router from './router/index'
-
-export default {
-    router,
-}
+export default {}
 </script>
 
 <style>

@@ -37,23 +37,50 @@
                 </ul>
             </div>
         </el-scrollbar>
-        <el-dialog :title="dialogTitle" :visible.sync="Visible" width="500px">
-            <el-form :model="form">
-                <el-form-item label="昵称" v-if="dialogTitle === '昵称修改'" :label-width="form.labelWidth">
-                    <el-input placeholder="请输入昵称" v-model="form.nickname" autocomplete="off"></el-input>
+        <el-dialog :title="form.dialogTitle" :visible.sync="Visible" width="500px" :close-on-click-modal='false'>
+            <el-form :model="form" ref="user_info">
+                <el-form-item
+                    label="昵称"
+                    v-if="form.dialogTitle === '昵称修改'"
+                    :label-width="form.labelWidth"
+                    :rules="[{ required: true, message: '昵称不能为空' }]"
+                    prop="nickname"
+                >
+                    <el-input
+                        type="nickname"
+                        placeholder="请输入昵称"
+                        v-model="form.nickname"
+                        autocomplete="off"
+                    ></el-input>
                 </el-form-item>
-                <el-form-item label="已绑定的邮箱" v-if="dialogTitle === '邮箱修改'" :label-width="form.labelWidth">
+                <el-form-item
+                    label="已绑定的邮箱"
+                    v-if="form.dialogTitle === '邮箱修改'"
+                    :label-width="form.labelWidth"
+                >
                     <el-input v-model="user_info.E_mail" :disabled="true"></el-input>
                 </el-form-item>
-                <el-form-item label="验证码" v-if="dialogTitle === '邮箱修改'" :label-width="form.labelWidth">
-                    <el-input v-model="form.icode">
+                <el-form-item
+                    label="验证码"
+                    v-if="form.dialogTitle === '邮箱修改'"
+                    :label-width="form.labelWidth"
+                    :rules="[{ required: true, message: '验证码不能为空' }]"
+                    prop="icode"
+                >
+                    <el-input type="icode" v-model="form.icode">
                         <el-button slot="append" @click="sendIcode()">{{ icodeButton }}</el-button>
                     </el-input>
                 </el-form-item>
-                <el-form-item label="要绑定的邮箱" v-if="dialogTitle === '邮箱修改'" :label-width="form.labelWidth">
-                    <el-input v-model="form.E_mail"></el-input>
+                <el-form-item
+                    label="要绑定的邮箱"
+                    v-if="form.dialogTitle === '邮箱修改'"
+                    :label-width="form.labelWidth"
+                    :rules="[{ required: true, message: '邮箱不能为空' }]"
+                    prop="E-mail"
+                >
+                    <el-input type="E-mail" v-model="form.E_mail"></el-input>
                 </el-form-item>
-                <el-form-item label="公告" v-if="dialogTitle === '公告修改'" :label-width="form.labelWidth">
+                <el-form-item label="公告" v-if="form.dialogTitle === '公告修改'" :label-width="form.labelWidth">
                     <el-input
                         type="textarea"
                         :rows="5"
@@ -82,8 +109,8 @@ export default {
                 announce: ''
             },
             Visible: false,
-            dialogTitle: '',
             form: {
+                dialogTitle: '',
                 nickname: '',
                 E_mail: '',
                 announce: '',
@@ -91,16 +118,19 @@ export default {
                 icode: ''
             },
             time: 30,
-            icodeButton: '点击发送邮箱验证码'
+            icodeButton: '点击发送邮箱验证码',
+            loadingInstance: this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
         }
     },
     methods: {
         showDialog(type) {
-            this.dialogTitle = type === 'nickname' ? '昵称修改' : type === 'e_mail' ? '邮箱修改' : '公告修改'
             this.form = {
+                dialogTitle: type === 'nickname' ? '昵称修改' : type === 'e_mail' ? '邮箱修改' : '公告修改',
                 nickname: this.user_info.nickname,
                 E_mail: '',
-                announce: this.user_info.announce
+                announce: this.user_info.announce,
+                labelWidth: 120,
+                icode: ''
             }
             this.Visible = true
         },
@@ -125,20 +155,30 @@ export default {
                 })
         },
         submit() {
-            this.$axios
-                .post('/manage/submit_user_info', this.form)
-                .then((successRespone) => {
-                    let responseResult = JSON.parse(successRespone.data)
-                    console.log(responseResult)
-                    this.user_info.nickname = responseResult.user_info.nickname
-                    this.user_info.E_mail = responseResult.user_info.E_mail
-                    this.user_info.announce = responseResult.user_info.announce
-                    alert('提交成功')
-                })
-                .catch((failRespone) => {
-                    alert('提交失败')
-                    return failRespone
-                })
+            this.$refs.user_info.validate((valid) => {
+                if (valid) {
+                    this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
+                    this.$axios
+                        .post('/manage/submit_user_info', this.form)
+                        .then((successRespone) => {
+                            let responseResult = JSON.parse(successRespone.data)
+                            console.log(responseResult)
+                            this.user_info.nickname = responseResult.user_info.nickname
+                            this.user_info.E_mail = responseResult.user_info.E_mail
+                            this.user_info.announce = responseResult.user_info.announce
+                            alert('提交成功')
+                            this.loadingInstance.close()
+                        })
+                        .catch((failRespone) => {
+                            alert('提交失败')
+                            this.loadingInstance.close()
+                            return failRespone
+                        })
+                } else {
+                    console.log('error submit!!')
+                    return false
+                }
+            })
         }
     },
     created: function() {
@@ -151,9 +191,11 @@ export default {
                 this.user_info.nickname = responseResult.user_info.nickname
                 this.user_info.E_mail = responseResult.user_info.E_mail
                 this.user_info.announce = responseResult.user_info.announce
+                this.loadingInstance.close()
             })
             .catch((failRespone) => {
                 console.log('Get Info failed')
+                this.loadingInstance.close()
                 return failRespone
             })
         this.user_info = {

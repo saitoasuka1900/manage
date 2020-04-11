@@ -2,7 +2,7 @@
     <el-container style="height: 100vh;">
         <el-main :style="{ backgroundImage: 'url(\'' + bgurl + '\')' }">
             <el-button @click="centerDialogVisible = true">点击打开登录框</el-button>
-            <el-dialog title="后台登陆" :visible.sync="centerDialogVisible" :width="LoginModuleSize" center>
+            <el-dialog title="后台登陆" :visible.sync="centerDialogVisible" :width="LoginModuleSize" center :close-on-click-modal='false'>
                 <div>
                     <span class="label">用户名：</span>
                     <el-input placeholder="请输入用户名" v-model="username" />
@@ -51,6 +51,8 @@ export default {
                 .then((successRespone) => {
                     let responseResult = JSON.parse(successRespone.data)
                     console.log(responseResult)
+                    this.$store.commit('changeLogin', {token: responseResult.token})
+                    this.$router.push({ path: '/' })
                     alert('登陆成功')
                 })
                 .catch((failRespone) => {

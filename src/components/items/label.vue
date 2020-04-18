@@ -113,7 +113,8 @@ export default {
             this.$axios
                 .post('manage/label/add', {
                     name: this.input_name,
-                    belong: this.LabelType
+                    belong: this.LabelType,
+                    rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -126,8 +127,13 @@ export default {
                         this.Logout()
                         return
                     }
-                    this.label_info.push(responseResult.data)
-                    this.label_info[this.label_info.length - 1].row_id = this.label_info.length - 1
+                    this.label_info.push({
+                        id: responseResult.data.id,
+                        name: responseResult.data.name,
+                        count: responseResult.data.count,
+                        row_id: this.label_info.length
+                    })
+                    this.$store.commit('setRnd', responseResult.data.rnd)
                     this.loading = false
                     this.$message({
                         message: '添加成功',
@@ -145,7 +151,8 @@ export default {
             this.loading = true
             this.$axios
                 .post('/manage/label/del', {
-                    id: this.focus_row
+                    id: this.focus_row,
+                    rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -160,6 +167,7 @@ export default {
                     }
                     this.label_info.splice(this.focus_row_id, 1)
                     for (let i = this.focus_row_id; i < this.label_info.length; ++i) this.label_info[i].row_id = i
+                    this.$store.commit('setRnd', responseResult.data.rnd)
                     this.loading = false
                     this.$message({
                         message: '删除成功',
@@ -173,12 +181,18 @@ export default {
                 })
         },
         editLabel() {
+            if (this.checkSpecificKey(this.input_name) == false) {
+                this.$message.error('名字不能有特殊字符')
+                return
+            }
             this.edit_control = false
             this.loading = true
             this.$axios
                 .post('/manage/label/edit', {
                     id: this.focus_row,
-                    name: this.input_name
+                    name: this.input_name,
+                    belong: this.LabelType,
+                    rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -192,6 +206,7 @@ export default {
                         return
                     }
                     this.label_info[this.focus_row_id].name = responseResult.data.label_name
+                    this.$store.commit('setRnd', responseResult.data.rnd)
                     this.loading = false
                     this.$message({
                         message: '编辑成功',
@@ -207,7 +222,7 @@ export default {
         getLabel() {
             this.$axios
                 .post('/manage/label/get', {
-                    labelType: this.LabelType
+                    belong: this.LabelType
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -239,19 +254,6 @@ export default {
                 this.input_name = this.focus_row_name
                 this.edit_control = true
             }
-        },
-        excute(type) {
-            this.loading = true
-            if (type === 'delete') this.delete_control = false
-            else {
-                this.edit_control = false
-                if (this.label_info[this.focus_row].name === this.input_name) {
-                    this.loading = false
-                    this.input_name = ''
-                    return
-                }
-            }
-            this.getLabel(type)
         },
         listenWidth() {
             this.small = document.documentElement.clientWidth < 600

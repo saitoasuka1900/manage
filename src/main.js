@@ -7,7 +7,7 @@ import '@/styles/index.css'
 
 // 引用axios，并设置基础URL为后端服务api地址
 const axios = require('axios')
-// 添加请求拦截器，在请求头中加token
+// 添加request拦截器，在请求头中加token
 axios.interceptors.request.use(
     (config) => {
         if (localStorage.getItem('token')) {
@@ -19,7 +19,27 @@ axios.interceptors.request.use(
         return Promise.reject(error)
     }
 )
-axios.defaults.baseURL = 'https://localhost:8443/api'
+// 添加response拦截器
+axios.interceptors.response.use(
+    response => {
+        return response;
+    },
+    error => {
+        if (error.response) {
+            switch (error.response.status) {
+                case 401:
+                    // 返回 401 清除token信息并跳转到登录页面
+                    store.commit('Logout');
+                    router.replace({
+                        path: 'login',
+                        query: {redirect: router.currentRoute.fullPath}
+                    })
+            }
+        }
+        return Promise.reject(error.response.data)   // 返回接口返回的错误信息
+})
+
+axios.defaults.baseURL = 'http://localhost:8443/api'
 // 将API方法绑定到全局
 Vue.prototype.$axios = axios
 Vue.config.productionTip = false

@@ -37,12 +37,12 @@
                 </ul>
             </div>
         </el-scrollbar>
-        <el-dialog :title="form.dialogTitle" :visible.sync="Visible" width="500px" :close-on-click-modal='false'>
+        <el-dialog :title="dialogTitle" :visible.sync="Visible" width="500px" :close-on-click-modal="false">
             <el-form :model="form" ref="user_info">
                 <el-form-item
                     label="昵称"
-                    v-if="form.dialogTitle === '昵称修改'"
-                    :label-width="form.labelWidth"
+                    v-if="dialogTitle === '昵称修改'"
+                    :label-width="labelWidth"
                     :rules="[{ required: true, message: '昵称不能为空' }]"
                     prop="nickname"
                 >
@@ -53,17 +53,13 @@
                         autocomplete="off"
                     ></el-input>
                 </el-form-item>
-                <el-form-item
-                    label="已绑定的邮箱"
-                    v-if="form.dialogTitle === '邮箱修改'"
-                    :label-width="form.labelWidth"
-                >
+                <el-form-item label="已绑定的邮箱" v-if="dialogTitle === '邮箱修改'" :label-width="labelWidth">
                     <el-input v-model="user_info.E_mail" :disabled="true"></el-input>
                 </el-form-item>
                 <el-form-item
                     label="验证码"
-                    v-if="form.dialogTitle === '邮箱修改'"
-                    :label-width="form.labelWidth"
+                    v-if="dialogTitle === '邮箱修改'"
+                    :label-width="labelWidth"
                     :rules="[{ required: true, message: '验证码不能为空' }]"
                     prop="icode"
                 >
@@ -73,14 +69,14 @@
                 </el-form-item>
                 <el-form-item
                     label="要绑定的邮箱"
-                    v-if="form.dialogTitle === '邮箱修改'"
-                    :label-width="form.labelWidth"
+                    v-if="dialogTitle === '邮箱修改'"
+                    :label-width="labelWidth"
                     :rules="[{ required: true, message: '邮箱不能为空' }]"
                     prop="E-mail"
                 >
                     <el-input type="E-mail" v-model="form.E_mail"></el-input>
                 </el-form-item>
-                <el-form-item label="公告" v-if="form.dialogTitle === '公告修改'" :label-width="form.labelWidth">
+                <el-form-item label="公告" v-if="dialogTitle === '公告修改'" :label-width="labelWidth">
                     <el-input
                         type="textarea"
                         :rows="5"
@@ -110,14 +106,14 @@ export default {
             },
             Visible: false,
             form: {
-                dialogTitle: '',
                 nickname: '',
                 E_mail: '',
                 announce: '',
-                labelWidth: 120,
                 icode: ''
             },
-            time: 30,
+            dialogTitle: '',
+            labelWidth: '120',
+            time: 60,
             icodeButton: '点击发送邮箱验证码',
             loadingInstance: this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
         }
@@ -125,14 +121,18 @@ export default {
     methods: {
         showDialog(type) {
             this.form = {
-                dialogTitle: type === 'nickname' ? '昵称修改' : type === 'e_mail' ? '邮箱修改' : '公告修改',
                 nickname: this.user_info.nickname,
                 E_mail: '',
                 announce: this.user_info.announce,
-                labelWidth: 120,
                 icode: ''
             }
+            this.dialogTitle = type === 'nickname' ? '昵称修改' : type === 'e_mail' ? '邮箱修改' : '公告修改'
             this.Visible = true
+        },
+        Logout() {
+            this.$store.commit('Logout')
+            this.loadingInstance.close()
+            this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
         },
         sendIcode() {
             this.$axios
@@ -158,24 +158,81 @@ export default {
             this.$refs.user_info.validate((valid) => {
                 if (valid) {
                     this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
-                    this.$axios
-                        .post('/manage/submit_user_info', this.form)
-                        .then((successRespone) => {
-                            let responseResult = JSON.parse(successRespone.data)
-                            console.log(responseResult)
-                            this.user_info.nickname = responseResult.user_info.nickname
-                            this.user_info.E_mail = responseResult.user_info.E_mail
-                            this.user_info.announce = responseResult.user_info.announce
-                            alert('提交成功')
-                            this.loadingInstance.close()
-                        })
-                        .catch((failRespone) => {
-                            alert('提交失败')
-                            this.loadingInstance.close()
-                            return failRespone
-                        })
+                    if (this.dialogTitle === '昵称修改') {
+                        this.$axios
+                            .post('/manage/submitNickName', {
+                                nickname: this.form.nickname,
+                                rnd: this.$store.state.rnd
+                            })
+                            .then((successRespone) => {
+                                let responseResult = successRespone.data
+                                if (responseResult.code !== 200) {
+                                    this.Logout()
+                                    return
+                                }
+                                this.user_info.nickname = responseResult.data.nickname
+                                this.$store.commit('setRnd', responseResult.data.rnd)
+                                this.loadingInstance.close()
+                                this.Visible = false
+                            })
+                            .catch((failRespone) => {
+                                this.$message.error('提交失败')
+                                this.loadingInstance.close()
+                                return failRespone
+                            })
+                    } else if (this.dialogTitle === '邮箱修改') {
+                        this.$axios
+                            .post('/manage/submitEmail', {
+                                email: this.form.E_mail,
+                                icode: this.form.icode,
+                                rnd: this.$store.state.rnd
+                            })
+                            .then((successRespone) => {
+                                let responseResult = successRespone.data
+                                if (responseResult.code === 404 && responseResult.message === '验证码超时或错误') {
+                                    this.$message.error(responseResult.message)
+                                    this.loadingInstance.close()
+                                    return
+                                }
+                                if (responseResult.code !== 200) {
+                                    this.Logout()
+                                    return
+                                }
+                                this.user_info.E_mail = responseResult.data.email
+                                this.$store.commit('setRnd', responseResult.data.rnd)
+                                this.loadingInstance.close()
+                                this.Visible = false
+                            })
+                            .catch((failRespone) => {
+                                this.$message.error('提交失败')
+                                this.loadingInstance.close()
+                                return failRespone
+                            })
+                    } else if (this.dialogTitle === '公告修改') {
+                        this.$axios
+                            .post('/manage/submitAnnounce', {
+                                announce: this.form.announce,
+                                rnd: this.$store.state.rnd
+                            })
+                            .then((successRespone) => {
+                                let responseResult = successRespone.data
+                                if (responseResult.code !== 200) {
+                                    this.Logout()
+                                    return
+                                }
+                                this.user_info.announce = responseResult.data.announce
+                                this.$store.commit('setRnd', responseResult.data.rnd)
+                                this.loadingInstance.close()
+                                this.Visible = false
+                            })
+                            .catch((failRespone) => {
+                                this.$message.error('提交失败')
+                                this.loadingInstance.close()
+                                return failRespone
+                            })
+                    }
                 } else {
-                    console.log('error submit!!')
+                    this.$message.error('提交的信息不满足格式要求')
                     return false
                 }
             })
@@ -185,12 +242,17 @@ export default {
         this.$axios
             .post('/manage/getUserInfo')
             .then((successRespone) => {
-                let responseResult = JSON.parse(successRespone.data)
-                console.log(responseResult)
-                this.user_info.username = responseResult.user_info.username
-                this.user_info.nickname = responseResult.user_info.nickname
-                this.user_info.E_mail = responseResult.user_info.E_mail
-                this.user_info.announce = responseResult.user_info.announce
+                let responseResult = successRespone.data
+                if (responseResult.code !== 200) {
+                    this.$store.commit('Logout')
+                    this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
+                    this.loadingInstance.close()
+                    return
+                }
+                this.user_info.username = responseResult.data.username
+                this.user_info.nickname = responseResult.data.nickname
+                this.user_info.E_mail = responseResult.data.E_mail
+                this.user_info.announce = responseResult.data.announce
                 this.loadingInstance.close()
             })
             .catch((failRespone) => {
@@ -198,13 +260,6 @@ export default {
                 this.loadingInstance.close()
                 return failRespone
             })
-        this.user_info = {
-            username: 'saitoasuka',
-            nickname: 'saitoasuka',
-            E_mail: '???',
-            announce:
-                'Ffaoijdfoaaedfgeasfveaswdvsdrvge swvgeswrvgdrvgeswvgeswrvgdrvgeswvgeswrvgdrvgeswvgeswrvgdrvgeswvgeswrvgbsewfveswfcewsfsefesfesaeweijfio'
-        }
     }
 }
 </script>

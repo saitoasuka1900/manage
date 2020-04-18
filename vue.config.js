@@ -49,7 +49,7 @@ module.exports = {
             .loader('vue-loader')
             .tap((options) => {
                 options.compilerOptions.preserveWhitespace = true
-                // 网络上最后还会添加 return options; 这是错的
+                // 网上的解决方法最后还会添加 return options; 这是错的
             })
 
         if (isProduction) {

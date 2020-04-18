@@ -6,10 +6,10 @@
             :width="small ? '70%' : '30%'"
             :close-on-click-modal="false"
         >
-            <el-input v-model="input_name" :placeholder="focus_row_name"></el-input>
+            <el-input v-model="input_name" :placeholder="focus_row_name" maxlength="6"></el-input>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="edit_control = false">取 消</el-button>
-                <el-button type="primary" @click="excute('edit')">确 定</el-button>
+                <el-button type="primary" @click="editLabel()">确 定</el-button>
             </span>
         </el-dialog>
         <el-dialog
@@ -21,11 +21,23 @@
             <span>是否删除类别 {{ LabelType }} 的标签 {{ focus_row_name }}</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delete_control = false">取 消</el-button>
-                <el-button type="primary" @click="excute('delete')">确 定</el-button>
+                <el-button type="primary" @click="delLabel()">确 定</el-button>
+            </span>
+        </el-dialog>
+        <el-dialog
+            title="添加标签"
+            :visible.sync="add_control"
+            :width="small ? '70%' : '30%'"
+            :close-on-click-modal="false"
+        >
+            <el-input v-model="input_name" placeholder="输入要添加的标签名字" maxlength="6"></el-input>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="add_control = false">取 消</el-button>
+                <el-button type="primary" @click="addLabel()">确 定</el-button>
             </span>
         </el-dialog>
         <el-table
-            :data="label_info"
+            :data="label_info.filter((data) => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
             height="94vh"
             :highlight-current-row="false"
             style="max-width: 100%;"
@@ -33,28 +45,28 @@
             element-loading-text="拼命加载中"
             element-loading-background="rgba(0, 0, 0, .6)"
         >
-            <el-table-column width="100" prop="id" label="标签编号" align="center"></el-table-column>
+            <el-table-column width="100" prop="row_id" label="标签编号" align="center"></el-table-column>
             <el-table-column prop="name" label="名称" min-width="100" align="center"></el-table-column>
             <el-table-column prop="count" label="数量" min-width="100" align="center"></el-table-column>
-            <el-table-column label="所属" width="100" align="center">
-                {{ LabelType }}
-            </el-table-column>
             <el-table-column label="操作" width="150" align="center">
+                <template slot="header" slot-scope="scope">
+                    <el-input v-model="search" size="mini" placeholder="输入关键字搜索" />
+                </template>
                 <template slot-scope="scope">
                     <el-button @click="runClick(scope.row, 'edit')" type="text" size="medium">编辑</el-button>
                     <el-button @click="runClick(scope.row, 'delete')" type="text" size="medium">删除</el-button>
                 </template>
+            </el-table-column>
+            <el-table-column label="添加" width="150" align="center">
+                <template slot="header">
+                    <el-button type="primary" circle @click="add_control = true">添加</el-button>
+                </template> 
             </el-table-column>
         </el-table>
     </div>
 </template>
 
 <script>
-function Label(id, name, count) {
-    this.id = id
-    this.name = name
-    this.count = count
-}
 
 export default {
     data() {
@@ -64,42 +76,164 @@ export default {
             loading: true,
             delete_control: false,
             edit_control: false,
+            add_control: false,
             focus_row_name: '',
             focus_row_id: 0,
             focus_row: 0,
             small: document.documentElement.clientWidth < 600,
-            input_name: ''
+            input_name: '',
+            search: ''
         }
     },
     methods: {
-        getLabel(type = '') {
+        Logout() {
+            this.$store.commit('Logout')
+            this.loading = false
+            this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
+        },
+        //特殊字符过滤
+        checkSpecificKey(str) {
+            let specialKey = "[`~!#$^&*()=|{}':;',\\[\\].<>/?~！#￥……&*（）——|{}【】‘；：”“'。，、？]‘' "
+            for (let i = 0; i < str.length; i++) if (specialKey.indexOf(str.substr(i, 1)) != -1) return false
+            return true
+        },
+        addLabel() {
+            for (let i = 0; i < this.label_info.length; ++i) {
+                if (this.input_name === this.label_info[i].name) {
+                    this.$message.error('标签名字重复')
+                    return
+                }
+            }
+            if (this.checkSpecificKey(this.input_name) == false) {
+                this.$message.error('名字不能有特殊字符')
+                return
+            }
+            this.add_control = false
+            this.loading = true
             this.$axios
-                .post('/manage/excuteLabel', {
-                    labelType: this.labelType,
-                    type: type,
-                    labelId: type === '' ? -1 : this.focus_row_id,
-                    newName: type === 'edit' ? this.input_name : ''
+                .post('manage/label/add', {
+                    name: this.input_name,
+                    belong: this.LabelType
                 })
                 .then((successRespone) => {
-                    let responseResult = JSON.parse(successRespone.data)
-                    console.log(responseResult)
-                    this.label_info.length = 0
-                    this.label_info = responseResult.label_info.slice
-                    if (type === 'edit') {
-                        this.label_info[this.focus_row].name = this.input_name
-                        this.input_name = ''
+                    let responseResult = successRespone.data
+                    if (responseResult.code === 404) {
+                        this.$message.error(responseResult.message)
+                        this.loading = false
+                        return
                     }
+                    if (responseResult.code !== 200) {
+                        this.Logout()
+                        return
+                    }
+                    this.label_info.push(responseResult.data)
+                    this.label_info[this.label_info.length - 1].row_id = this.label_info.length - 1
                     this.loading = false
+                    this.$message({
+                        message: '添加成功',
+                        type: 'success'
+                    })
                 })
                 .catch((failRespone) => {
+                    this.$message.error('添加失败')
+                    this.loading = false
+                    return failRespone
+                })
+        },
+        delLabel() {
+            this.delete_control = false
+            this.loading = true
+            this.$axios
+                .post('/manage/label/del', {
+                    id: this.focus_row
+                })
+                .then((successRespone) => {
+                    let responseResult = successRespone.data
+                    if (responseResult.code === 404) {
+                        this.$message.error(responseResult.message)
+                        this.loading = false
+                        return
+                    }
+                    if (responseResult.code !== 200) {
+                        this.Logout()
+                        return
+                    }
+                    this.label_info.splice(this.focus_row_id, 1)
+                    for (let i = this.focus_row_id; i < this.label_info.length; ++i) this.label_info[i].row_id = i
+                    this.loading = false
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    })
+                })
+                .catch((failRespone) => {
+                    this.$message.error('删除失败')
+                    console.log(failRespone)
+                    this.loading = false
+                })
+        },
+        editLabel() {
+            this.edit_control = false
+            this.loading = true
+            this.$axios
+                .post('/manage/label/edit', {
+                    id: this.focus_row,
+                    name: this.input_name
+                })
+                .then((successRespone) => {
+                    let responseResult = successRespone.data
+                    if (responseResult.code === 404) {
+                        this.$message.error(responseResult.message)
+                        this.loading = false
+                        return
+                    }
+                    if (responseResult.code !== 200) {
+                        this.Logout()
+                        return
+                    }
+                    this.label_info[this.focus_row_id].name = responseResult.data.label_name
+                    this.loading = false
+                    this.$message({
+                        message: '编辑成功',
+                        type: 'success'
+                    })
+                })
+                .catch((failRespone) => {
+                    this.$message.error('编辑失败')
+                    console.log(failRespone)
+                    this.loading = false
+                })
+        },
+        getLabel() {
+            this.$axios
+                .post('/manage/label/get', {
+                    labelType: this.LabelType
+                })
+                .then((successRespone) => {
+                    let responseResult = successRespone.data
+                    if (responseResult.code !== 200) {
+                        this.Logout()
+                        return
+                    }
+                    console.log(responseResult)
+                    this.label_info = responseResult.data.label_info
+                    for (let i = 0; i < this.label_info.length; ++i) this.label_info[i].row_id = i
+                    this.loading = false
+                    this.$message({
+                        message: '获取标签成功',
+                        type: 'success'
+                    })
+                })
+                .catch((failRespone) => {
+                    this.$message.error('获取标签失败')
                     console.log(failRespone)
                     this.loading = false
                 })
         },
         runClick(row, type) {
-            this.focus_row_id = row.id
+            this.focus_row_id = row.row_id
             this.focus_row_name = row.name
-            this.focus_row = row.row_id
+            this.focus_row = row.id
             if (type === 'delete') this.delete_control = true
             else {
                 this.input_name = this.focus_row_name
@@ -124,23 +258,6 @@ export default {
         }
     },
     created: function() {
-        this.label_info.push(new Label(1, 'fas', 131))
-        this.label_info.push(new Label(2, 'fddwas', 13241))
-        this.label_info.push(new Label(1, 'fas', 1231))
-        this.label_info.push(new Label(4, 'fafsdafs', 321))
-        this.label_info.push(new Label(1, 'fads', 131))
-        this.label_info.push(new Label(2, 'fddwas', 13241))
-        this.label_info.push(new Label(1, 'fas', 1231))
-        this.label_info.push(new Label(4, 'fafsdafs', 321))
-        this.label_info.push(new Label(1, 'fads', 131))
-        this.label_info.push(new Label(2, 'fddwas', 13241))
-        this.label_info.push(new Label(1, 'fas', 1231))
-        this.label_info.push(new Label(4, 'fafsdafs', 321))
-        this.label_info.push(new Label(1, 'fads', 131))
-        this.label_info.push(new Label(2, 'fddwas', 13241))
-        this.label_info.push(new Label(1, 'fas', 1231))
-        this.label_info.push(new Label(4, 'fafsdafs', 321))
-        this.label_info.push(new Label(1, 'fads', 131))
         for (let i = 0; i < this.label_info.length; ++i) this.label_info[i].row_id = i
         this.getLabel()
         window.addEventListener('resize', this.listenWidth)
@@ -149,6 +266,8 @@ export default {
         $route(to) {
             this.labelType = to.path.split('/')[1]
             this.loading = true
+            this.search = ''
+            this.delete_control = this.edit_control = this.add_control = false
             this.getLabel()
         }
     },

@@ -50,6 +50,12 @@
                             </span>
                         </el-menu-item>
                     </template>
+                    <el-menu-item @click="Logout()">
+                        <i class="el-icon-switch-button" style="color: white !important"></i>
+                        <span slot="title">
+                            注销
+                        </span>
+                    </el-menu-item>
                 </el-menu>
             </el-aside>
         </el-scrollbar>
@@ -110,6 +116,10 @@ export default {
         },
         listenWidth() {
             this.isCollapse = document.documentElement.clientWidth > 700
+        },
+        Logout() {
+            this.$store.commit('Logout')
+            this.$router.push({ path: '/login' })
         }
     },
     computed: {

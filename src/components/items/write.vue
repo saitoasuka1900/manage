@@ -40,7 +40,14 @@
             show-word-limit
             style="width: 100%; height: 5%;"
         ></el-input>
-        <mavon-editor v-model="content" :style="{ height: eidtor_height }" @fullScreen="fullScreen" />
+        <mavon-editor
+            v-model="content"
+            :style="{ height: eidtor_height }"
+            @fullScreen="fullScreen"
+            @imgAdd="imgAdd"
+            @imgDel="imgDel"
+            v-if="show"
+        />
     </div>
 </template>
 
@@ -71,10 +78,24 @@ export default {
                 { label: '其他', value: 3 }
             ],
             label: [],
-            loadingInstance: ''
+            loadingInstance: '',
+            imgFiles: [],
+            show: true
         }
     },
     methods: {
+        imgAdd(pos, file) {
+            this.imgFiles.push({
+                file: file,
+                src: '',
+                isUpload: false,
+                isDel: false
+            })
+        },
+        // 参数pos为长度为二的数组，第一个数为该图片是从1开始第几个图片(包括已经被删除的图片)，第二个是该文件的对象
+        imgDel(pos) {
+            this.imgFiles[pos[0] - 1].isDel = true
+        },
         fullScreen(status) {
             this.eidtor_height = status ? '100%' : '90%'
         },
@@ -93,22 +114,49 @@ export default {
                 alert('文章内容为空')
                 return
             }
+            // 第一步.将图片上传到服务器.
             this.$axios
-                .post('/manage/submit_post', {
-                    postId: this.postId,
-                    postType: this.postType,
-                    submitType: type,
-                    title: this.title,
-                    catagory: this.catagory,
-                    label: this.label,
-                    description: this.description,
-                    content: this.content
+                .post('/manage/write/upload/img', {
+                    imgs: this.imgFiles,
+                    rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
-                    if (successRespone.data.code === 200) alert('提交成功')
+                    let responseResult = successRespone.data
+                    if (responseResult.code !== 200) {
+                        this.Logout()
+                        return
+                    }
+                    // 第二步.将返回的url替换到文本原位置![...](0) -> ![...](url)
+                    // $vm.$img2Url 详情见本页末尾
+                    for (let i = 0; i < this.imgFiles.length; ++i) {
+                        if (this.imgFiles[i].isUpload || this.imgFiles[i].isDel) continue
+                        this.imgFiles[i].isUpload = true
+                        this.imgFiles[i].src = responseResult.data.src
+                        mavonEditor.$img2Url(i + 1, responseResult.data.src)
+                    }
+                    this.$store.commit('setRnd', responseResult.data.rnd)
+                    this.$axios
+                        .post('/manage/write/upload/post', {
+                            id: this.postId,
+                            title: this.title,
+                            belong: this.catagory,
+                            label: this.label,
+                            description: this.description,
+                            type: this.postType,
+                            content: this.content,
+                            rnd: this.$store.state.rnd
+                        })
+                        .then((successRespone) => {
+                            if (successRespone.data.code === 200) alert('提交成功')
+                        })
+                        .catch((failRespone) => {
+                            alert('提交失败')
+                            return failRespone
+                        })
                 })
                 .catch((failRespone) => {
-                    alert('提交失败')
+                    console.log(failRespone)
+                    this.$message.error('图片上传失败')
                     return failRespone
                 })
         },
@@ -122,7 +170,7 @@ export default {
                 .then((successRespone) => {
                     let responseResult = JSON.parse(successRespone.data)
                     console.log(responseResult)
-                    this.label_options = responseResult.label_options.slice()
+                    this.label_options = responseResult.label_options.splice()
                 })
                 .catch((failRespone) => {
                     console.log('Get Labels failed')
@@ -168,18 +216,23 @@ export default {
     },
     watch: {
         $route(to) {
-            if (typeof to.params.id !== 'undefined') {
-                this.postId = to.params.id
-                this.postType = to.path.split('/')[2]
-                this.content = ''
-            } else {
-                this.postId = -1
-                this.postType = ''
-                this.content = Content()
-                return
-            }
-            this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
-            this.getPost()
+            this.show = false
+            this.imgFiles.length = 0
+            this.$nextTick(() => {
+                this.show = true
+                if (typeof to.params.id !== 'undefined') {
+                    this.postId = to.params.id
+                    this.postType = to.path.split('/')[2]
+                    this.content = ''
+                } else {
+                    this.postId = -1
+                    this.postType = ''
+                    this.content = Content()
+                    return
+                }
+                this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
+                this.getPost()
+            })
         },
         catagory(to) {
             this.getLabel(to)

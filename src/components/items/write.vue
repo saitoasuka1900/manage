@@ -2,12 +2,12 @@
     <div class="opacity-set" style="text-align: initial;">
         <div class="title-input">
             <el-input v-model="title" placeholder="请输入标题" maxlength="20" show-word-limit />
-            <el-select v-model="catagory" placeholder="请选择类别" style="height: 100%; width: 120px;">
+            <el-select v-model="category" placeholder="请选择类别" style="height: 100%; width: 120px;">
                 <el-option
                     v-for="item in catagoty_options"
                     :key="item.value"
                     :label="item.label"
-                    :value="item.value"
+                    :value="item.label"
                 ></el-option>
             </el-select>
             <el-select
@@ -23,8 +23,8 @@
             >
                 <el-option
                     v-for="item in label_options"
-                    :key="item.value"
-                    :label="item.label"
+                    :key="item.key"
+                    :label="item.name"
                     :value="item.value"
                 ></el-option>
             </el-select>
@@ -47,6 +47,7 @@
             @imgAdd="imgAdd"
             @imgDel="imgDel"
             v-if="show"
+            ref="md"
         />
     </div>
 </template>
@@ -71,12 +72,8 @@ export default {
                 { label: '开发', value: 2 },
                 { label: '其他', value: 3 }
             ],
-            catagory: '',
-            label_options: [
-                { label: '算法', value: 1 },
-                { label: '开发', value: 2 },
-                { label: '其他', value: 3 }
-            ],
+            category: '',
+            label_options: [],
             label: [],
             loadingInstance: '',
             imgFiles: [],
@@ -85,16 +82,13 @@ export default {
     },
     methods: {
         imgAdd(pos, file) {
-            this.imgFiles.push({
-                file: file,
-                src: '',
-                isUpload: false,
-                isDel: false
-            })
+            console.log(pos)
+            this.imgFiles.push(file)
         },
         // 参数pos为长度为二的数组，第一个数为该图片是从1开始第几个图片(包括已经被删除的图片)，第二个是该文件的对象
         imgDel(pos) {
-            this.imgFiles[pos[0] - 1].isDel = true
+            console.log(pos)
+            this.imgFiles.splice(pos[0] - 1, 1)
         },
         fullScreen(status) {
             this.eidtor_height = status ? '100%' : '90%'
@@ -105,7 +99,7 @@ export default {
                     alert('标题为空')
                     return
                 }
-                if (this.catagory === '') {
+                if (this.category === '') {
                     alert('未选择文章类型')
                     return
                 }
@@ -114,11 +108,19 @@ export default {
                 alert('文章内容为空')
                 return
             }
+            let formData = new FormData()
+            for (let i = 0; i < this.imgFiles.length; ++i)
+                formData.append('file', this.imgFiles[i])
+            formData.append('properties', new Blob([JSON.stringify({
+                id: this.postId,
+                rnd: this.$store.state.rnd             
+            })], {
+                type: "application/json"
+            }));
             // 第一步.将图片上传到服务器.
             this.$axios
-                .post('/manage/write/upload/img', {
-                    imgs: this.imgFiles,
-                    rnd: this.$store.state.rnd
+                .post('/manage/write/upload/img', formData, {
+                    headers: {"Content-Type": undefined}
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -128,19 +130,15 @@ export default {
                     }
                     // 第二步.将返回的url替换到文本原位置![...](0) -> ![...](url)
                     // $vm.$img2Url 详情见本页末尾
-                    for (let i = 0; i < this.imgFiles.length; ++i) {
-                        if (this.imgFiles[i].isUpload || this.imgFiles[i].isDel) continue
-                        this.imgFiles[i].isUpload = true
-                        this.imgFiles[i].src = responseResult.data.src
-                        mavonEditor.$img2Url(i + 1, responseResult.data.src)
-                    }
+                    for (let i = 0; i < this.imgFiles.length; ++i)
+                        this.$refs.md.$img2Url(i + 1, responseResult.data.url[i])
                     this.$store.commit('setRnd', responseResult.data.rnd)
                     this.$axios
                         .post('/manage/write/upload/post', {
                             id: this.postId,
                             title: this.title,
-                            belong: this.catagory,
-                            label: this.label,
+                            category: this.category,
+                            labels: this.label,
                             description: this.description,
                             type: this.postType,
                             content: this.content,
@@ -164,13 +162,19 @@ export default {
             this.label_options.length = 0
             this.label.length = 0
             this.$axios
-                .post('/manage/get_label', {
-                    catagory: to
+                .post('/manage/write/label/get', {
+                    category: to
                 })
                 .then((successRespone) => {
-                    let responseResult = JSON.parse(successRespone.data)
-                    console.log(responseResult)
-                    this.label_options = responseResult.label_options.splice()
+                    let responseResult = successRespone.data
+                    for (let i = 0; i < responseResult.data.labels.length; ++i) {
+                        let label = responseResult.data.labels[i]
+                        this.label_options.push({
+                            value: label.id,
+                            key: i,
+                            name: label.name
+                        })
+                    }
                 })
                 .catch((failRespone) => {
                     console.log('Get Labels failed')
@@ -187,7 +191,7 @@ export default {
                     let responseResult = JSON.parse(successRespone.data)
                     console.log(responseResult)
                     this.title = responseResult.title
-                    this.catagory = responseResult.catagory
+                    this.category = responseResult.category
                     this.label = responseResult.label.slice()
                     this.description = responseResult.description
                     this.content = responseResult.content
@@ -234,7 +238,7 @@ export default {
                 this.getPost()
             })
         },
-        catagory(to) {
+        category(to) {
             this.getLabel(to)
         }
     },
@@ -272,13 +276,13 @@ export default {
 }
 </style>
 
-<style deep>
+<style>
 .title-input > .el-input {
     width: calc(98% - 700px);
     min-width: 0;
 }
-.el-input,
-.el-input__inner {
+.title-input .el-input,
+.title-input .el-input__inner {
     height: 100%;
     line-height: 100%;
 }

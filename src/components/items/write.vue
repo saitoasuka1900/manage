@@ -133,22 +133,38 @@ export default {
                     for (let i = 0; i < this.imgFiles.length; ++i)
                         this.$refs.md.$img2Url(i + 1, responseResult.data.url[i])
                     this.$store.commit('setRnd', responseResult.data.rnd)
+                    let labels = []
+                    for (let label of this.label) {
+                        if (typeof(label) === Number)
+                            labels.push(this.label_options[label].name)
+                        else
+                            labels.push(label)
+                    }
+                    this.postId = responseResult.data.id
                     this.$axios
                         .post('/manage/write/upload/post', {
-                            id: this.postId,
+                            id: parseInt(this.postId),
                             title: this.title,
                             category: this.category,
-                            labels: this.label,
+                            labels: labels,
                             description: this.description,
                             type: this.postType,
                             content: this.content,
                             rnd: this.$store.state.rnd
                         })
                         .then((successRespone) => {
-                            if (successRespone.data.code === 200) alert('提交成功')
+                            let responseResult = successRespone.data
+                            if (responseResult.code !== 200) {
+                                this.Logout()
+                                return
+                            }
+                            this.$message({
+                                message: '提交成功',
+                                type: 'success'
+                            })
                         })
                         .catch((failRespone) => {
-                            alert('提交失败')
+                            this.$message.error('提交失败')
                             return failRespone
                         })
                 })
@@ -170,9 +186,9 @@ export default {
                     for (let i = 0; i < responseResult.data.labels.length; ++i) {
                         let label = responseResult.data.labels[i]
                         this.label_options.push({
-                            value: label.id,
+                            value: i,
                             key: i,
-                            name: label.name
+                            name: label
                         })
                     }
                 })
@@ -210,7 +226,7 @@ export default {
             this.postType = this.$route.path.split('/')[2]
             this.content = ''
         } else {
-            this.postId = -1
+            this.postId = '-1'
             this.postType = ''
             this.content = Content()
             return

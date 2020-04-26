@@ -75,23 +75,29 @@ export default {
             category: '',
             label_options: [],
             label: [],
+            saveLabel: [],
             loadingInstance: '',
             imgFiles: [],
-            show: true
+            show: true,
+            jumpCheck: true
         }
     },
     methods: {
         imgAdd(pos, file) {
-            console.log(pos)
             this.imgFiles.push(file)
         },
         // 参数pos为长度为二的数组，第一个数为该图片是从1开始第几个图片(包括已经被删除的图片)，第二个是该文件的对象
         imgDel(pos) {
-            console.log(pos)
             this.imgFiles.splice(pos[0] - 1, 1)
         },
         fullScreen(status) {
             this.eidtor_height = status ? '100%' : '90%'
+        },
+        //特殊字符过滤
+        checkSpecificKey(str) {
+            let specialKey = "[`~!#$^&*()=|{}':;',\\[\\].<>/?~！#￥……&*（）——|{}【】‘；：”“'。，、？]‘' "
+            for (let i = 0; i < str.length; i++) if (specialKey.indexOf(str.substr(i, 1)) != -1) return false
+            return true
         },
         submit(type) {
             if (type === 'post') {
@@ -108,23 +114,44 @@ export default {
                 alert('文章内容为空')
                 return
             }
+            let labels = []
+            for (let label of this.label) {
+                if (typeof label === Number) labels.push(this.label_options[label].name)
+                else {
+                    if (label.length > 6 || !this.checkSpecificKey(label)) {
+                        this.message.error('标签长度超出限制或含非法字符')
+                        return
+                    }
+                    labels.push(label)
+                }
+            }
+            this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
+            this.postType = type
             let formData = new FormData()
-            for (let i = 0; i < this.imgFiles.length; ++i)
-                formData.append('file', this.imgFiles[i])
-            formData.append('properties', new Blob([JSON.stringify({
-                id: this.postId,
-                rnd: this.$store.state.rnd             
-            })], {
-                type: "application/json"
-            }));
+            for (let i = 0; i < this.imgFiles.length; ++i) formData.append('file', this.imgFiles[i])
+            formData.append(
+                'properties',
+                new Blob(
+                    [
+                        JSON.stringify({
+                            id: this.postId,
+                            rnd: this.$store.state.rnd
+                        })
+                    ],
+                    {
+                        type: 'application/json'
+                    }
+                )
+            )
             // 第一步.将图片上传到服务器.
             this.$axios
                 .post('/manage/write/upload/img', formData, {
-                    headers: {"Content-Type": undefined}
+                    headers: { 'Content-Type': undefined }
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
                     if (responseResult.code !== 200) {
+                        this.loadingInstance.close()
                         this.Logout()
                         return
                     }
@@ -133,13 +160,6 @@ export default {
                     for (let i = 0; i < this.imgFiles.length; ++i)
                         this.$refs.md.$img2Url(i + 1, responseResult.data.url[i])
                     this.$store.commit('setRnd', responseResult.data.rnd)
-                    let labels = []
-                    for (let label of this.label) {
-                        if (typeof(label) === Number)
-                            labels.push(this.label_options[label].name)
-                        else
-                            labels.push(label)
-                    }
                     this.postId = responseResult.data.id
                     this.$axios
                         .post('/manage/write/upload/post', {
@@ -155,6 +175,7 @@ export default {
                         .then((successRespone) => {
                             let responseResult = successRespone.data
                             if (responseResult.code !== 200) {
+                                this.loadingInstance.close()
                                 this.Logout()
                                 return
                             }
@@ -162,21 +183,27 @@ export default {
                                 message: '提交成功',
                                 type: 'success'
                             })
+                            this.jumpCheck = false
+                            this.$store.commit('setRnd', responseResult.data.rnd)
+                            this.loadingInstance.close()
+                            this.$router.push({ path: '/write/' + this.postType + '/' + this.postId })
                         })
                         .catch((failRespone) => {
                             this.$message.error('提交失败')
+                            this.loadingInstance.close()
                             return failRespone
                         })
                 })
                 .catch((failRespone) => {
-                    console.log(failRespone)
                     this.$message.error('图片上传失败')
+                    this.loadingInstance.close()
                     return failRespone
                 })
         },
         getLabel(to) {
             this.label_options.length = 0
             this.label.length = 0
+            if (to === '') return
             this.$axios
                 .post('/manage/write/label/get', {
                     category: to
@@ -186,11 +213,20 @@ export default {
                     for (let i = 0; i < responseResult.data.labels.length; ++i) {
                         let label = responseResult.data.labels[i]
                         this.label_options.push({
-                            value: i,
+                            value: label.id,
                             key: i,
-                            name: label
+                            name: label.name
                         })
                     }
+                    for (let j = 0; j < this.saveLabal.length; ++j) {
+                        let label = this.saveLabal[j]
+                        for (let i = 0; i < responseResult.data.labels.length; ++i) {
+                            if (label != responseResult.data.labels[i].name) continue
+                            this.label.push(i + 1)
+                            break
+                        }
+                    }
+                    this.saveLabal.length = 0
                 })
                 .catch((failRespone) => {
                     console.log('Get Labels failed')
@@ -198,29 +234,50 @@ export default {
                 })
         },
         getPost() {
+            this.content = ''
+            this.title = ''
+            this.description = ''
+            this.category = ''
+            this.saveLabel.length = 0
             this.$axios
-                .post('/manage/get_post', {
+                .post('/manage/write/post/get', {
                     postId: this.postId,
-                    postType: this.postType
+                    postType: this.postType,
+                    rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
-                    let responseResult = JSON.parse(successRespone.data)
-                    console.log(responseResult)
-                    this.title = responseResult.title
-                    this.category = responseResult.category
-                    this.label = responseResult.label.slice()
-                    this.description = responseResult.description
-                    this.content = responseResult.content
+                    let responseResult = successRespone.data
+                    if (responseResult.code === 404) {
+                        this.$message.error('获取文章失败')
+                        this.loadingInstance.close()
+                        return
+                    }
+                    if (responseResult.code !== 200) {
+                        this.loadingInstance.close()
+                        this.Logout()
+                        return
+                    }
+                    this.title = responseResult.data.title
+                    this.saveLabal = responseResult.data.label
+                    this.category = responseResult.data.category
+                    this.description = responseResult.data.description
+                    this.content = responseResult.data.content
+                    this.$message({
+                        message: '获取文章成功',
+                        type: 'success'
+                    })
+                    this.$store.commit('setRnd', responseResult.data.rnd)
                     this.loadingInstance.close()
                 })
                 .catch((failRespone) => {
                     this.loadingInstance.close()
-                    alert('获取失败')
+                    this.$message.error('获取文章失败')
                     return failRespone
                 })
         }
     },
     created: function() {
+        this.jumpCheck = true
         if (typeof this.$route.params.id !== 'undefined') {
             this.postId = this.$route.params.id
             this.postType = this.$route.path.split('/')[2]
@@ -245,7 +302,11 @@ export default {
                     this.postType = to.path.split('/')[2]
                     this.content = ''
                 } else {
-                    this.postId = -1
+                    this.title = ''
+                    this.description = ''
+                    this.category = ''
+                    this.label.length = 0
+                    this.postId = '-1'
                     this.postType = ''
                     this.content = Content()
                     return
@@ -259,19 +320,29 @@ export default {
         }
     },
     beforeRouteLeave(to, from, next) {
-        const answer = window.confirm('当前页面数据未保存，确定要离开？')
-        if (answer) {
+        if (this.jumpCheck === false) {
+            this.jumpCheck = true
             next()
         } else {
-            next(false)
+            const answer = window.confirm('当前页面数据未保存，确定要离开？')
+            if (answer) {
+                next()
+            } else {
+                next(false)
+            }
         }
     },
     beforeRouteUpdate(to, from, next) {
-        const answer = window.confirm('当前页面数据未保存，确定要离开？')
-        if (answer) {
+        if (this.jumpCheck === false) {
+            this.jumpCheck = true
             next()
         } else {
-            next(false)
+            const answer = window.confirm('当前页面数据未保存，确定要离开？')
+            if (answer) {
+                next()
+            } else {
+                next(false)
+            }
         }
     }
 }

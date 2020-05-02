@@ -1,13 +1,23 @@
 <template>
     <div>
-        <el-dialog title="编辑文章" :visible.sync="edit_control" :width="small ? '70%' : '30%'" :close-on-click-modal='false'>
+        <el-dialog
+            title="编辑文章"
+            :visible.sync="edit_control"
+            :width="small ? '70%' : '30%'"
+            :close-on-click-modal="false"
+        >
             <span>是否打开并编辑文章 {{ focus_row_title }}({{ focus_row_time }})</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="edit_control = false">取 消</el-button>
                 <el-button type="primary" @click="excute('edit')">确 定</el-button>
             </span>
         </el-dialog>
-        <el-dialog title="删除文章" :visible.sync="delete_control" :width="small ? '70%' : '30%'" :close-on-click-modal='false'>
+        <el-dialog
+            title="删除文章"
+            :visible.sync="delete_control"
+            :width="small ? '70%' : '30%'"
+            :close-on-click-modal="false"
+        >
             <span>是否删除文章 {{ focus_row_title }}({{ focus_row_time }})</span>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delete_control = false">取 消</el-button>
@@ -16,7 +26,7 @@
         </el-dialog>
         <el-table
             :data="post_info"
-            height="86vh"
+            :height="postToT <= pageSize ? '94vh' : '89vh'"
             :highlight-current-row="false"
             style="max-width: 100%;"
             v-loading="loading"
@@ -25,7 +35,7 @@
         >
             <el-table-column min-width="100" prop="title" label="标题" align="center"></el-table-column>
             <el-table-column prop="time" label="发布时间" width="160" align="center"></el-table-column>
-            <el-table-column prop="_class" label="所属" width="100" align="center"></el-table-column>
+            <el-table-column prop="category" label="所属" width="100" align="center"></el-table-column>
             <el-table-column prop="label" label="标签" align="center"></el-table-column>
             <el-table-column prop="comment" label="评论数" width="90" align="center"></el-table-column>
             <el-table-column label="操作" width="100" align="center">
@@ -39,7 +49,7 @@
             :small="small"
             @current-change="handleCurrentChange"
             current-page.sync="1"
-            :page-size="15"
+            :page-size="pageSize"
             layout="prev, pager, next"
             :total="postToT"
             hideOnSinglePage
@@ -48,15 +58,6 @@
 </template>
 
 <script>
-function Post(id, title, time, _class, label, comment) {
-    this.id = id
-    this.title = title
-    this.time = time
-    this._class = _class
-    this.label = label
-    this.comment = comment
-}
-
 export default {
     data() {
         return {
@@ -68,30 +69,57 @@ export default {
             focus_row_time: '',
             focus_row_id: 0,
             pageId: 1,
+            pageSize: 15,
             postToT: 500,
             small: document.documentElement.clientWidth < 600,
-            where: this.$route.path.split('/')[1],
+            where: this.$route.path.split('/')[1]
         }
     },
     methods: {
-        getPost(type = '') {
+        getPost() {
             this.$axios
-                .post('/manage/excutePost', {
-                    where: this.where,
-                    pageSize: 15,
-                    pageId: this.pageId,
-                    type: type,
-                    postId: type === '' ? -1 : this.focus_row_id
+                .post('/get/post', {
+                    type: this.where,
+                    pageSize: this.pageSize,
+                    pageId: this.pageId
                 })
                 .then((successRespone) => {
-                    let responseResult = JSON.parse(successRespone.data)
-                    console.log(responseResult)
-                    this.post_info.length = 0
-                    this.postToT = responseResult.postToT
-                    this.post_info = responseResult.post_info
+                    let responseResult = successRespone.data
+                    this.postToT = responseResult.data.postToT
+                    this.post_info = responseResult.data.post_info
                     this.loading = false
                 })
                 .catch((failRespone) => {
+                    console.log(failRespone)
+                    this.loading = false
+                })
+        },
+        delPost() {
+            this.$axios
+                .post('/manage/post/del', {
+                    id: this.focus_row_id,
+                    pageSize: this.pageSize,
+                    pageId: this.pageId,
+                    rnd: this.$store.state.rnd
+                })
+                .then((successRespone) => {
+                    let responseResult = successRespone.data
+                    if (responseResult.code !== 200) {
+                        this.loading = false
+                        this.Logout()
+                        return
+                    }
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    })
+                    this.$store.commit('setRnd', responseResult.data.rnd)
+                    this.postToT = responseResult.data.postToT
+                    this.post_info = responseResult.data.post_info
+                    this.loading = false
+                })
+                .catch((failRespone) => {
+                    this.$message.error('删除失败')
                     console.log(failRespone)
                     this.loading = false
                 })
@@ -100,21 +128,20 @@ export default {
             this.focus_row_title = row.title
             this.focus_row_time = row.time
             this.focus_row_id = row.id
+            console.log(row)
             if (type === 'edit') this.edit_control = true
             else this.delete_control = true
         },
         excute(type) {
             if (type === 'edit') this.edit_control = false
             else this.delete_control = false
-            if (type === 'edit' || isNaN(this.focus_row_id)) {
-                if (isNaN(this.focus_row_id))
-                    return
+            if (type === 'edit') {
                 let path = '/write/' + this.where + '/' + this.focus_row_id.toString()
                 this.$router.push({ path: path })
                 return
             }
             this.loading = true
-            this.getPost(type)
+            this.delPost()
         },
         handleCurrentChange(val) {
             this.loading = true
@@ -126,24 +153,11 @@ export default {
         }
     },
     created: function() {
-        this.post_info.push(new Post(1, 'dasdasdasdioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 32))
-        this.post_info.push(new Post(2, 'dasdsadsaioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 31))
-        this.post_info.push(new Post(3, 'dasisadsadoj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 1))
-        this.post_info.push(new Post(4, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 100))
-        this.post_info.push(new Post(5, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
-        this.post_info.push(new Post(6, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
-        this.post_info.push(new Post(7, 'daasdasdsasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
-        this.post_info.push(new Post(8, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
-        this.post_info.push(new Post(9, 'dadsadsasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
-        this.post_info.push(new Post(10, 'dasioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfapoiejf aija', 23))
-        this.post_info.push(
-            new Post(11, 'dasdasddioj', '1900-02-12 12:23:21', 'dsa', 'faopi dfa dasdaw wad awdaw dpoiejf aija', 23)
-        )
         this.getPost()
         window.addEventListener('resize', this.listenWidth)
     },
     watch: {
-        $route (to) {
+        $route(to) {
             this.where = to.path.split('/')[1]
             this.loading = true
             this.getPost()

@@ -9,7 +9,7 @@
         </el-dialog>
         <el-table
             :data="message_info"
-            height="86vh"
+            :height="messageToT <= pageSize ? '94vh' : '89vh'"
             :highlight-current-row="false"
             style="max-width: 100%;"
             v-loading="loading"
@@ -17,7 +17,7 @@
             element-loading-background="rgba(0, 0, 0, .6)"
         >
             <el-table-column width="100" prop="id" label="留言编号" align="center"></el-table-column>
-            <el-table-column prop="from" label="留言用户" width="100" align="center"></el-table-column>
+            <el-table-column prop="username" label="留言用户" width="100" align="center"></el-table-column>
             <el-table-column prop="content" label="内容" min-width="300" align="center"></el-table-column>
             <el-table-column prop="time" label="留言时间" width="160" align="center"></el-table-column>
             <el-table-column label="操作" width="90" align="center">
@@ -30,7 +30,7 @@
             :small="small"
             @current-change="handleCurrentChange"
             current-page.sync="1"
-            :page-size="15"
+            :page-size="pageSize"
             layout="prev, pager, next"
             :total="messageToT"
             hideOnSinglePage
@@ -39,12 +39,6 @@
 </template>
 
 <script>
-function Message(id, from, content, time) {
-    this.id = id
-    this.from = from
-    this.content = content
-    this.time = time
-}
 
 export default {
     data() {
@@ -56,30 +50,77 @@ export default {
             focus_row_from: '',
             focus_row_id: 0,
             pageId: 1,
-            messageToT: 500,
-            small: document.documentElement.clientWidth < 600
+            messageToT: 0,
+            small: document.documentElement.clientWidth < 600,
+            pageSize: 15
         }
     },
     methods: {
-        getMessage(type = '') {
+        getMessage() {
             this.$axios
-                .post('/manage/excuteMessage', {
-                    pageSize: 15,
+                .post('/message/get', {
+                    pageSize: this.pageSize,
                     pageId: this.pageId,
-                    type: type,
-                    messageId: type === '' ? -1 : this.focus_row_id
                 })
                 .then((successRespone) => {
-                    let responseResult = JSON.parse(successRespone.data)
-                    console.log(responseResult)
-                    if (successRespone.data.code === 200) {
-                        this.message_info.length = 0
-                        this.messageToT = responseResult.messageToT
-                        this.message_info = responseResult.message_info
+                    let responseResult = successRespone.data
+                    this.messageToT = responseResult.data.messageToT
+                    this.message_info.length = 0
+                    let message_infos = responseResult.data.message_infos
+                    for (let i = 0; i < message_infos.length; ++i) {
+                        let elem = message_infos[i]
+                        this.message_info.push({
+                            id: elem.id,
+                            content: elem.content,
+                            time: elem.time,
+                            username: elem.username,
+                            row_id: i
+                        })
                     }
                     this.loading = false
+                    this.$message({
+                        message: '获取留言成功',
+                        type: 'success'
+                    })
                 })
                 .catch((failRespone) => {
+                    this.$message.error('获取留言失败')
+                    console.log(failRespone)
+                    this.loading = false
+                })
+        },
+        delMessage() {
+            this.$axios
+                .post('/manage/message/del', {
+                    id: this.message_info[this.focus_row_id].id,
+                    rnd: this.$store.state.rnd,
+                    pageSize: this.pageSize,
+                    pageId: this.pageId,
+                })
+                .then((successRespone) => {
+                    let responseResult = successRespone.data
+                    this.$store.commit('setRnd', responseResult.data.rnd)
+                    this.messageToT = responseResult.messageToT
+                    this.message_info.length = 0
+                    let message_infos = responseResult.message_infos
+                    for (let i = 0; i < message_infos.length; ++i) {
+                        let elem = message_infos[i]
+                        this.message_info.push({
+                            id: elem.id,
+                            content: elem.content,
+                            time: elem.time,
+                            username: elem.username,
+                            row_id: i
+                        })
+                    }
+                    this.loading = false
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    })
+                })
+                .catch((failRespone) => {
+                    this.$message.error('删除失败')
                     console.log(failRespone)
                     this.loading = false
                 })
@@ -87,13 +128,13 @@ export default {
         runClick(row) {
             this.focus_row_content = row.content
             this.focus_row_from = row.from
-            this.focus_row_id = row.id
+            this.focus_row_id = row.row_id
             this.delete_control = true
         },
         excute() {
             this.delete_control = false
             this.loading = true
-            this.getMessage('delete')
+            this.delMessage()
         },
         handleCurrentChange(val) {
             this.loading = true
@@ -105,24 +146,6 @@ export default {
         }
     },
     created: function() {
-        this.message_info.push(new Message(1, 'dasdasdasdioj', 'dsafaopi dfapoiejf aija32', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(2, 'dasdsadsaioj', 'faefaevgfedrfvesfeafaedfaesdd', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(3, 'dasisadsadoj', 'faesfaesfesdvgffesdfc', '1900-02-12 12:23:21'))
-        this.message_info.push(
-            new Message(
-                4,
-                'dasioj',
-                'asdfaefasedawsdj发哦欸附件奥fewuiofewi欧菲哈饿哦哎符合奥i肺癌藕粉奥i发啊饿哦i发饿哦哎附件啊饿哦发饿哦i罚恶婆i减肥安排减肥啊减肥非法进啊饿哦i放假啊饿哦i积分啊额尔多faefiaehf oiaehf oeuifo iaef oaiefodi aefoia efoaefniefnoae soifaioejfijaegoivjedoifvneswodifj ewjfgoiewj fger f weoijfeois rfnerfnv ergoerng orenf onrgwoejf wesdon发哦欸发哦都阿斯都i阿散井佛埃斯蒂骚',
-                '1900-02-12 12:23:21'
-            )
-        )
-        this.message_info.push(new Message(5, 'dasioj', 'sergfesf', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(6, 'dasioj', 'feasgwesrgfewff', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(7, 'daasdasdsasioj', 'aewfeagaevgfaefaefvgae', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(8, 'dasioj', 'afewvgaedgvawedvfgrdwgbwefvedws', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(9, 'dadsadsasioj', 'aefeasfewgfvwesfvwefvgwef', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(10, 'dasioj', 'faefaesw', '1900-02-12 12:23:21'))
-        this.message_info.push(new Message(11, 'dasdasddioj', 'faegaefaewfvgrsdfvsd', '1900-02-12 12:23:21'))
         this.getMessage()
         window.addEventListener('resize', this.listenWidth)
     },

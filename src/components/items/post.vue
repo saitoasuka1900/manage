@@ -88,9 +88,14 @@ export default {
                     this.postToT = responseResult.data.postToT
                     this.post_info = responseResult.data.post_info
                     this.loading = false
+                    this.$message({
+                        message: '获取文章成功',
+                        type: 'success'
+                    })
                 })
                 .catch((failRespone) => {
                     console.log(failRespone)
+                    this.$message.error('获取文章失败')
                     this.loading = false
                 })
         },
@@ -144,21 +149,24 @@ export default {
             this.delPost()
         },
         handleCurrentChange(val) {
-            this.loading = true
-            this.pageId = val
-            this.getPost()
+            let path = '/write/' + this.where + '/' + val.toString()
+            this.$router.push({ path: path })
         },
         listenWidth() {
             this.small = document.documentElement.clientWidth < 600
         }
     },
     created: function() {
+        this.where = this.$route.path.split('/')[1]
+        this.pageId = Number(this.$route.params.id)
+        this.loading = true
         this.getPost()
         window.addEventListener('resize', this.listenWidth)
     },
     watch: {
         $route(to) {
             this.where = to.path.split('/')[1]
+            this.pageId = Number(to.params.id)
             this.loading = true
             this.getPost()
         }

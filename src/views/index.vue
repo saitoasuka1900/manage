@@ -90,10 +90,10 @@ export default {
                 new Item('el-icon-user-solid', '个人中心', '/'),
                 new Item('el-icon-s-home', '博客管理', 'blog', [
                     new Item('el-icon-asuka-write', '写文章', '/write'),
-                    new Item('el-icon-notebook-1', '文章管理', '/post'),
-                    new Item('el-icon-takeaway-box', '草稿箱', '/draft')
+                    new Item('el-icon-notebook-1', '文章管理', '/post/1'),
+                    new Item('el-icon-takeaway-box', '草稿箱', '/draft/1')
                 ]),
-                new Item('el-icon-asuka-message', '留言板', '/message'),
+                new Item('el-icon-asuka-message', '留言板', '/message/1'),
                 new Item('el-icon-s-grid', '标签管理', 'label', [
                     new Item('el-icon-asuka-algorithm', '算法', '/algorithm'),
                     new Item('el-icon-asuka-development', '开发', '/development'),

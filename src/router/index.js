@@ -43,14 +43,14 @@ const routes = [
                 }
             },
             {
-                path: '(post|draft)',
+                path: '(post|draft)/:id(\\d+)',
                 component: () => import('components/items/post'),
                 meta: {
                     requireAuth: true // 该路由项需要权限校验
                 }
             },
             {
-                path: 'message',
+                path: 'message/:id(\\d+)',
                 component: () => import('components/items/message'),
                 meta: {
                     requireAuth: true // 该路由项需要权限校验

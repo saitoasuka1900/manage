@@ -1,6 +1,11 @@
 <template>
     <div>
-        <el-dialog title="删除留言" :visible.sync="delete_control" :width="small ? '70%' : '30%'" :close-on-click-modal='false'>
+        <el-dialog
+            title="删除留言"
+            :visible.sync="delete_control"
+            :width="small ? '70%' : '30%'"
+            :close-on-click-modal="false"
+        >
             <p>是否删除用户 {{ focus_row_from }} 的留言：{{ focus_row_content }}</p>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="delete_control = false">取 消</el-button>
@@ -39,7 +44,6 @@
 </template>
 
 <script>
-
 export default {
     data() {
         return {
@@ -60,7 +64,7 @@ export default {
             this.$axios
                 .post('/message/get', {
                     pageSize: this.pageSize,
-                    pageId: this.pageId,
+                    pageId: this.pageId
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -95,7 +99,7 @@ export default {
                     id: this.message_info[this.focus_row_id].id,
                     rnd: this.$store.state.rnd,
                     pageSize: this.pageSize,
-                    pageId: this.pageId,
+                    pageId: this.pageId
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
@@ -137,20 +141,28 @@ export default {
             this.delMessage()
         },
         handleCurrentChange(val) {
-            this.loading = true
-            this.pageId = val
-            this.getMessage()
+            let path = '/message/' + val.toString()
+            this.$router.push({ path: path })
         },
         listenWidth() {
             this.small = document.documentElement.clientWidth < 600
         }
     },
     created: function() {
+        this.pageId = Number(this.$route.params.id)
+        this.loading = true
         this.getMessage()
         window.addEventListener('resize', this.listenWidth)
     },
     beforeDestroy: function() {
         window.removeEventListener('resize', this.listenWidth)
+    },
+    watch: {
+        $route(to) {
+            this.pageId = Number(to.params.id)
+            this.loading = true
+            this.getMessage()
+        }
     }
 }
 </script>

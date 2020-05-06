@@ -21,25 +21,28 @@ axios.interceptors.request.use(
 )
 // 添加response拦截器
 axios.interceptors.response.use(
-    response => {
-        return response;
+    (response) => {
+        return response
     },
-    error => {
+    (error) => {
         if (error.response) {
             switch (error.response.status) {
                 case 401:
                     // 返回 401 清除token信息并跳转到登录页面
-                    store.commit('Logout');
+                    store.commit('Logout')
                     router.replace({
                         path: 'login',
-                        query: {redirect: router.currentRoute.fullPath}
+                        query: { redirect: router.currentRoute.fullPath }
                     })
             }
         }
-        return Promise.reject(error.response.data)   // 返回接口返回的错误信息
-})
+        return Promise.reject(error.response.data) // 返回接口返回的错误信息
+    }
+)
 
-axios.defaults.baseURL = 'http://localhost:8443/api'
+axios.defaults.baseURL =
+    process.env.NODE_ENV === 'production' ? 'https://www.saitoasuka.xyz:8443/api' : 'http://localhost:8443/api'
+console.log(process.env.NODE_ENV)
 // 将API方法绑定到全局
 Vue.prototype.$axios = axios
 Vue.config.productionTip = false

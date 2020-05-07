@@ -48,7 +48,7 @@
         <el-pagination
             :small="small"
             @current-change="handleCurrentChange"
-            current-page.sync="1"
+            :current-page.sync="pageId"
             :page-size="pageSize"
             layout="prev, pager, next"
             :total="postToT"
@@ -68,7 +68,7 @@ export default {
             focus_row_title: '',
             focus_row_time: '',
             focus_row_id: 0,
-            pageId: 1,
+            pageId: Number(this.$route.params.id),
             pageSize: 15,
             postToT: 500,
             small: document.documentElement.clientWidth < 600,
@@ -85,13 +85,17 @@ export default {
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
-                    this.postToT = responseResult.data.postToT
-                    this.post_info = responseResult.data.post_info
+                    if (responseResult.code === 200) {
+                        this.postToT = responseResult.data.postToT
+                        this.post_info = responseResult.data.post_info
+                        this.$message({
+                            message: '获取文章成功',
+                            type: 'success'
+                        })
+                    }
+                    else
+                        this.$message.error('获取文章失败')
                     this.loading = false
-                    this.$message({
-                        message: '获取文章成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     console.log(failRespone)
@@ -109,18 +113,21 @@ export default {
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
-                    if (responseResult.code !== 200) {
-                        this.loading = false
+                    if (responseResult.code === 401) {
                         this.Logout()
                         return
                     }
-                    this.$message({
-                        message: '删除成功',
-                        type: 'success'
-                    })
-                    this.$store.commit('setRnd', responseResult.data.rnd)
-                    this.postToT = responseResult.data.postToT
-                    this.post_info = responseResult.data.post_info
+                    if (responseResult.code === 200) {
+                        this.$message({
+                            message: '删除成功',
+                            type: 'success'
+                        })
+                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.postToT = responseResult.data.postToT
+                        this.post_info = responseResult.data.post_info
+                    }
+                    else
+                        this.$message.error('删除失败')
                     this.loading = false
                 })
                 .catch((failRespone) => {
@@ -154,11 +161,14 @@ export default {
         },
         listenWidth() {
             this.small = document.documentElement.clientWidth < 600
+        },
+        Logout() {
+            this.$store.commit('Logout')
+            this.loading = false
+            this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
         }
     },
     created: function() {
-        this.where = this.$route.path.split('/')[1]
-        this.pageId = Number(this.$route.params.id)
         this.loading = true
         this.getPost()
         window.addEventListener('resize', this.listenWidth)

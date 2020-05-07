@@ -145,6 +145,8 @@ export default {
         }
     },
     created: function() {
+        if (this.$store.state.token !== null && this.$store.state.rnd !== null)
+            this.$router.push({ path: '/' })
         this.bgurl =
             document.documentElement.clientWidth > 950
                 ? this.url_root + 'login_bg_max.jpg'

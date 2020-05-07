@@ -151,7 +151,6 @@ export default {
                 .then((successRespone) => {
                     let responseResult = successRespone.data
                     if (responseResult.code !== 200) {
-                        this.loadingInstance.close()
                         this.Logout()
                         return
                     }
@@ -175,7 +174,6 @@ export default {
                         .then((successRespone) => {
                             let responseResult = successRespone.data
                             if (responseResult.code !== 200) {
-                                this.loadingInstance.close()
                                 this.Logout()
                                 return
                             }
@@ -253,7 +251,6 @@ export default {
                         return
                     }
                     if (responseResult.code !== 200) {
-                        this.loadingInstance.close()
                         this.Logout()
                         return
                     }
@@ -274,6 +271,11 @@ export default {
                     this.$message.error('获取文章失败')
                     return failRespone
                 })
+        },
+        Logout() {
+            this.$store.commit('Logout')
+            this.loadingInstance.close()
+            this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
         }
     },
     created: function() {

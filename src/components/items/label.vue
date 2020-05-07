@@ -123,22 +123,26 @@ export default {
                         this.loading = false
                         return
                     }
-                    if (responseResult.code !== 200) {
+                    if (responseResult.code === 401) {
                         this.Logout()
                         return
                     }
-                    this.label_info.push({
-                        id: responseResult.data.id,
-                        name: responseResult.data.name,
-                        count: responseResult.data.count,
-                        row_id: this.label_info.length
-                    })
-                    this.$store.commit('setRnd', responseResult.data.rnd)
+                    if (responseResult.code === 200) {
+                        this.label_info.push({
+                            id: responseResult.data.id,
+                            name: responseResult.data.name,
+                            count: responseResult.data.count,
+                            row_id: this.label_info.length
+                        })
+                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.$message({
+                            message: '添加成功',
+                            type: 'success'
+                        })
+                    }
+                    else
+                        this.$message.error('添加失败')
                     this.loading = false
-                    this.$message({
-                        message: '添加成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     this.$message.error('添加失败')
@@ -161,18 +165,22 @@ export default {
                         this.loading = false
                         return
                     }
-                    if (responseResult.code !== 200) {
+                    if (responseResult.code === 401) {
                         this.Logout()
                         return
                     }
-                    this.label_info.splice(this.focus_row_id, 1)
-                    for (let i = this.focus_row_id; i < this.label_info.length; ++i) this.label_info[i].row_id = i
-                    this.$store.commit('setRnd', responseResult.data.rnd)
+                    if (responseResult.code === 200) {
+                        this.label_info.splice(this.focus_row_id, 1)
+                        for (let i = this.focus_row_id; i < this.label_info.length; ++i) this.label_info[i].row_id = i
+                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.$message({
+                            message: '删除成功',
+                            type: 'success'
+                        })
+                    }
+                    else
+                        this.$message.error('删除失败')
                     this.loading = false
-                    this.$message({
-                        message: '删除成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     this.$message.error('删除失败')
@@ -201,17 +209,21 @@ export default {
                         this.loading = false
                         return
                     }
-                    if (responseResult.code !== 200) {
+                    if (responseResult.code === 401) {
                         this.Logout()
                         return
                     }
-                    this.label_info[this.focus_row_id].name = responseResult.data.label_name
-                    this.$store.commit('setRnd', responseResult.data.rnd)
+                    if (responseResult.code === 200) {
+                        this.label_info[this.focus_row_id].name = responseResult.data.label_name
+                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.$message({
+                            message: '编辑成功',
+                            type: 'success'
+                        })
+                    }
+                    else
+                        this.$message.error('编辑失败')
                     this.loading = false
-                    this.$message({
-                        message: '编辑成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     this.$message.error('编辑失败')
@@ -226,18 +238,17 @@ export default {
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
-                    if (responseResult.code !== 200) {
-                        this.Logout()
-                        return
+                    if (responseResult.code === 200) {
+                        this.label_info = responseResult.data.label_info
+                        for (let i = 0; i < this.label_info.length; ++i) this.label_info[i].row_id = i
+                        this.$message({
+                            message: '获取标签成功',
+                            type: 'success'
+                        })
                     }
-                    console.log(responseResult)
-                    this.label_info = responseResult.data.label_info
-                    for (let i = 0; i < this.label_info.length; ++i) this.label_info[i].row_id = i
+                    else
+                        this.$message.error('获取标签失败')
                     this.loading = false
-                    this.$message({
-                        message: '获取标签成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     this.$message.error('获取标签失败')

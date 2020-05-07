@@ -137,20 +137,30 @@ export default {
         sendIcode() {
             this.$axios
                 .post('/manage/sendIcode')
-                .then(() => {
-                    this.icodeButton = this.time + '秒后可重新发送'
-                    let interval = window.setInterval(() => {
-                        this.time -= 1
+                .then((successRespone) => {
+                    let responseResult = successRespone.data
+                    if (responseResult.code === 401) {
+                        this.$store.commit('Logout')
+                        this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
+                        return
+                    }
+                    if (responseResult.code === 200) {
                         this.icodeButton = this.time + '秒后可重新发送'
-                        if (this.time < 0) {
-                            this.icodeButton = '点击发送邮箱验证码'
-                            this.time = 30
-                            window.clearInterval(interval)
-                        }
-                    }, 1000)
+                        let interval = window.setInterval(() => {
+                            this.time -= 1
+                            this.icodeButton = this.time + '秒后可重新发送'
+                            if (this.time < 0) {
+                                this.icodeButton = '点击发送邮箱验证码'
+                                this.time = 30
+                                window.clearInterval(interval)
+                            }
+                        }, 1000)
+                    }
+                    else
+                        this.$message.error('验证码发送失败')
                 })
                 .catch((failRespone) => {
-                    alert('验证码发送失败')
+                    this.$message.error('验证码发送失败')
                     return failRespone
                 })
         },
@@ -166,14 +176,18 @@ export default {
                             })
                             .then((successRespone) => {
                                 let responseResult = successRespone.data
-                                if (responseResult.code !== 200) {
+                                if (responseResult.code === 401) {
                                     this.Logout()
                                     return
                                 }
-                                this.user_info.nickname = responseResult.data.nickname
-                                this.$store.commit('setRnd', responseResult.data.rnd)
+                                if (responseResult.code === 200) {
+                                    this.user_info.nickname = responseResult.data.nickname
+                                    this.$store.commit('setRnd', responseResult.data.rnd)
+                                    this.Visible = false
+                                }
+                                else
+                                    this.$message.error('提交失败')
                                 this.loadingInstance.close()
-                                this.Visible = false
                             })
                             .catch((failRespone) => {
                                 this.$message.error('提交失败')
@@ -194,14 +208,18 @@ export default {
                                     this.loadingInstance.close()
                                     return
                                 }
-                                if (responseResult.code !== 200) {
+                                if (responseResult.code === 401) {
                                     this.Logout()
                                     return
                                 }
-                                this.user_info.E_mail = responseResult.data.email
-                                this.$store.commit('setRnd', responseResult.data.rnd)
+                                if (responseResult.code === 200) {
+                                    this.user_info.E_mail = responseResult.data.email
+                                    this.$store.commit('setRnd', responseResult.data.rnd)
+                                    this.Visible = false
+                                }
+                                else
+                                    this.$message.error('提交失败')
                                 this.loadingInstance.close()
-                                this.Visible = false
                             })
                             .catch((failRespone) => {
                                 this.$message.error('提交失败')
@@ -216,14 +234,18 @@ export default {
                             })
                             .then((successRespone) => {
                                 let responseResult = successRespone.data
-                                if (responseResult.code !== 200) {
+                                if (responseResult.code === 401) {
                                     this.Logout()
                                     return
                                 }
-                                this.user_info.announce = responseResult.data.announce
-                                this.$store.commit('setRnd', responseResult.data.rnd)
+                                if (responseResult.code === 200) {
+                                    this.user_info.announce = responseResult.data.announce
+                                    this.$store.commit('setRnd', responseResult.data.rnd)
+                                    this.Visible = false
+                                }
+                                else
+                                    this.$message.error('提交失败')
                                 this.loadingInstance.close()
-                                this.Visible = false
                             })
                             .catch((failRespone) => {
                                 this.$message.error('提交失败')
@@ -231,10 +253,8 @@ export default {
                                 return failRespone
                             })
                     }
-                } else {
+                } else
                     this.$message.error('提交的信息不满足格式要求')
-                    return false
-                }
             })
         }
     },
@@ -243,20 +263,22 @@ export default {
             .post('/manage/getUserInfo')
             .then((successRespone) => {
                 let responseResult = successRespone.data
-                if (responseResult.code !== 200) {
-                    this.$store.commit('Logout')
-                    this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
-                    this.loadingInstance.close()
+                if (responseResult.code === 401) {
+                    this.Logout()
                     return
                 }
-                this.user_info.username = responseResult.data.username
-                this.user_info.nickname = responseResult.data.nickname
-                this.user_info.E_mail = responseResult.data.E_mail
-                this.user_info.announce = responseResult.data.announce
+                if (responseResult.code === 200) {
+                    this.user_info.username = responseResult.data.username
+                    this.user_info.nickname = responseResult.data.nickname
+                    this.user_info.E_mail = responseResult.data.E_mail
+                    this.user_info.announce = responseResult.data.announce
+                }
+                else
+                    this.$message.error('获取信息失败')
                 this.loadingInstance.close()
             })
             .catch((failRespone) => {
-                console.log('Get Info failed')
+                this.$message.error('获取信息失败')
                 this.loadingInstance.close()
                 return failRespone
             })

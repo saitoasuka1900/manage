@@ -34,7 +34,7 @@
         <el-pagination
             :small="small"
             @current-change="handleCurrentChange"
-            current-page.sync="1"
+            :current-page.sync="pageId"
             :page-size="pageSize"
             layout="prev, pager, next"
             :total="messageToT"
@@ -53,7 +53,7 @@ export default {
             focus_row_content: '',
             focus_row_from: '',
             focus_row_id: 0,
-            pageId: 1,
+            pageId: Number(this.$route.params.id),
             messageToT: 0,
             small: document.documentElement.clientWidth < 600,
             pageSize: 15
@@ -68,24 +68,28 @@ export default {
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
-                    this.messageToT = responseResult.data.messageToT
-                    this.message_info.length = 0
-                    let message_infos = responseResult.data.message_infos
-                    for (let i = 0; i < message_infos.length; ++i) {
-                        let elem = message_infos[i]
-                        this.message_info.push({
-                            id: elem.id,
-                            content: elem.content,
-                            time: elem.time,
-                            username: elem.username,
-                            row_id: i
+                    if (responseResult.code === 200) {
+                        this.messageToT = responseResult.data.messageToT
+                        this.message_info.length = 0
+                        let message_infos = responseResult.data.message_infos
+                        for (let i = 0; i < message_infos.length; ++i) {
+                            let elem = message_infos[i]
+                            this.message_info.push({
+                                id: elem.id,
+                                content: elem.content,
+                                time: elem.time,
+                                username: elem.username,
+                                row_id: i
+                            })
+                        }
+                        this.$message({
+                            message: '获取留言成功',
+                            type: 'success'
                         })
                     }
+                    else
+                        this.$message.error('获取留言失败')
                     this.loading = false
-                    this.$message({
-                        message: '获取留言成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     this.$message.error('获取留言失败')
@@ -103,25 +107,33 @@ export default {
                 })
                 .then((successRespone) => {
                     let responseResult = successRespone.data
-                    this.$store.commit('setRnd', responseResult.data.rnd)
-                    this.messageToT = responseResult.messageToT
-                    this.message_info.length = 0
-                    let message_infos = responseResult.message_infos
-                    for (let i = 0; i < message_infos.length; ++i) {
-                        let elem = message_infos[i]
-                        this.message_info.push({
-                            id: elem.id,
-                            content: elem.content,
-                            time: elem.time,
-                            username: elem.username,
-                            row_id: i
+                    if (responseResult.code === 401) {
+                        this.Logout()
+                        return
+                    }
+                    if (responseResult.code === 200) {
+                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.messageToT = responseResult.messageToT
+                        this.message_info.length = 0
+                        let message_infos = responseResult.message_infos
+                        for (let i = 0; i < message_infos.length; ++i) {
+                            let elem = message_infos[i]
+                            this.message_info.push({
+                                id: elem.id,
+                                content: elem.content,
+                                time: elem.time,
+                                username: elem.username,
+                                row_id: i
+                            })
+                        }
+                        this.$message({
+                            message: '删除成功',
+                            type: 'success'
                         })
                     }
+                    else
+                        this.$message.error('删除失败')
                     this.loading = false
-                    this.$message({
-                        message: '删除成功',
-                        type: 'success'
-                    })
                 })
                 .catch((failRespone) => {
                     this.$message.error('删除失败')
@@ -146,10 +158,14 @@ export default {
         },
         listenWidth() {
             this.small = document.documentElement.clientWidth < 600
+        },
+        Logout() {
+            this.$store.commit('Logout')
+            this.loading = false
+            this.$router.push({ path: '/login', query: { redirect: this.$route.fullpath } })
         }
     },
     created: function() {
-        this.pageId = Number(this.$route.params.id)
         this.loading = true
         this.getMessage()
         window.addEventListener('resize', this.listenWidth)

@@ -19,7 +19,7 @@
                         </el-button>
                     </li>
                     <li>
-                        E-mail: {{ user_info.E_mail }}&nbsp;&nbsp;
+                        E-mail: {{ user_info.email }}&nbsp;&nbsp;
                         <el-button style="font-size: 1.2rem; padding: 3px 0" type="text" @click="showDialog('e_mail')">
                             更换绑定邮箱
                         </el-button>
@@ -54,7 +54,7 @@
                     ></el-input>
                 </el-form-item>
                 <el-form-item label="已绑定的邮箱" v-if="dialogTitle === '邮箱修改'" :label-width="labelWidth">
-                    <el-input v-model="user_info.E_mail" :disabled="true"></el-input>
+                    <el-input v-model="user_info.email" :disabled="true"></el-input>
                 </el-form-item>
                 <el-form-item
                     label="验证码"
@@ -74,7 +74,7 @@
                     :rules="[{ required: true, message: '邮箱不能为空' }]"
                     prop="E-mail"
                 >
-                    <el-input type="E-mail" v-model="form.E_mail"></el-input>
+                    <el-input type="E-mail" v-model="form.email"></el-input>
                 </el-form-item>
                 <el-form-item label="公告" v-if="dialogTitle === '公告修改'" :label-width="labelWidth">
                     <el-input
@@ -101,13 +101,13 @@ export default {
             user_info: {
                 username: '',
                 nickname: '',
-                E_mail: '',
+                email: '',
                 announce: ''
             },
             Visible: false,
             form: {
                 nickname: '',
-                E_mail: '',
+                email: '',
                 announce: '',
                 icode: ''
             },
@@ -122,7 +122,7 @@ export default {
         showDialog(type) {
             this.form = {
                 nickname: this.user_info.nickname,
-                E_mail: '',
+                email: '',
                 announce: this.user_info.announce,
                 icode: ''
             }
@@ -136,7 +136,7 @@ export default {
         },
         sendIcode() {
             this.$axios
-                .post('/manage/sendIcode')
+                .post('/operator/send/iCode')
                 .then((successRespone) => {
                     let responseResult = successRespone.data
                     if (responseResult.code === 401) {
@@ -170,7 +170,7 @@ export default {
                     this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
                     if (this.dialogTitle === '昵称修改') {
                         this.$axios
-                            .post('/manage/submitNickName', {
+                            .post('/operator/submitNickName', {
                                 nickname: this.form.nickname,
                                 rnd: this.$store.state.rnd
                             })
@@ -183,6 +183,7 @@ export default {
                                 if (responseResult.code === 200) {
                                     this.user_info.nickname = responseResult.data.nickname
                                     this.$store.commit('setRnd', responseResult.data.rnd)
+                                    this.$store.commit('setNickName', responseResult.data.nickname)
                                     this.Visible = false
                                 }
                                 else
@@ -197,7 +198,7 @@ export default {
                     } else if (this.dialogTitle === '邮箱修改') {
                         this.$axios
                             .post('/manage/submitEmail', {
-                                email: this.form.E_mail,
+                                email: this.form.email,
                                 icode: this.form.icode,
                                 rnd: this.$store.state.rnd
                             })
@@ -213,8 +214,9 @@ export default {
                                     return
                                 }
                                 if (responseResult.code === 200) {
-                                    this.user_info.E_mail = responseResult.data.email
+                                    this.user_info.email = responseResult.data.email
                                     this.$store.commit('setRnd', responseResult.data.rnd)
+                                    this.$store.commit('setEmail', responseResult.data.email)
                                     this.Visible = false
                                 }
                                 else
@@ -260,7 +262,7 @@ export default {
     },
     created: function() {
         this.$axios
-            .post('/manage/getUserInfo')
+            .post('/operator/getUserInfo')
             .then((successRespone) => {
                 let responseResult = successRespone.data
                 if (responseResult.code === 401) {
@@ -270,7 +272,7 @@ export default {
                 if (responseResult.code === 200) {
                     this.user_info.username = responseResult.data.username
                     this.user_info.nickname = responseResult.data.nickname
-                    this.user_info.E_mail = responseResult.data.E_mail
+                    this.user_info.email = responseResult.data.email
                     this.user_info.announce = responseResult.data.announce
                 }
                 else

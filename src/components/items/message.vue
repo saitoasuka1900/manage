@@ -22,7 +22,7 @@
             element-loading-background="rgba(0, 0, 0, .6)"
         >
             <el-table-column width="100" prop="id" label="留言编号" align="center"></el-table-column>
-            <el-table-column prop="username" label="留言用户" width="100" align="center"></el-table-column>
+            <el-table-column prop="nickname" label="留言用户" width="100" align="center"></el-table-column>
             <el-table-column prop="content" label="内容" min-width="300" align="center"></el-table-column>
             <el-table-column prop="time" label="留言时间" width="160" align="center"></el-table-column>
             <el-table-column label="操作" width="90" align="center">
@@ -67,18 +67,18 @@ export default {
                     pageId: this.pageId
                 })
                 .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code === 200) {
-                        this.messageToT = responseResult.data.messageToT
+                    let res = successRespone.data
+                    if (res.code === 200) {
+                        this.messageToT = res.data.messageToT
                         this.message_info.length = 0
-                        let message_infos = responseResult.data.message_infos
+                        let message_infos = res.data.message_infos
                         for (let i = 0; i < message_infos.length; ++i) {
                             let elem = message_infos[i]
                             this.message_info.push({
                                 id: elem.id,
                                 content: elem.content,
                                 time: elem.time,
-                                username: elem.username,
+                                nickname: elem.nickname,
                                 row_id: i
                             })
                         }
@@ -106,23 +106,24 @@ export default {
                     pageId: this.pageId
                 })
                 .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code === 401) {
+                    let res = successRespone.data
+                    if (res.code === 401) {
                         this.Logout()
                         return
                     }
-                    if (responseResult.code === 200) {
-                        this.$store.commit('setRnd', responseResult.data.rnd)
-                        this.messageToT = responseResult.messageToT
+                    if (res.code === 200) {
+                        this.$store.commit('setRnd', res.data.rnd)
+                        this.messageToT = res.data.messageToT
                         this.message_info.length = 0
-                        let message_infos = responseResult.message_infos
+                        let message_infos = res.data.message_infos
+                        console.log(message_infos)
                         for (let i = 0; i < message_infos.length; ++i) {
                             let elem = message_infos[i]
                             this.message_info.push({
                                 id: elem.id,
                                 content: elem.content,
                                 time: elem.time,
-                                username: elem.username,
+                                nickname: elem.nickname,
                                 row_id: i
                             })
                         }

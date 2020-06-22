@@ -41,7 +41,7 @@ axios.interceptors.response.use(
 )
 
 axios.defaults.baseURL =
-    process.env.NODE_ENV === 'production' ? 'https://www.saitoasuka.xyz:8443/api' : 'http://localhost:8443/api'
+    process.env.NODE_ENV === 'production' ? 'https://www.saitoasuka.xyz/api' : 'http://localhost:8443/api'
 console.log(process.env.NODE_ENV)
 // 将API方法绑定到全局
 Vue.prototype.$axios = axios

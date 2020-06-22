@@ -117,24 +117,24 @@ export default {
                     rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code === 404) {
-                        this.$message.error(responseResult.message)
+                    let res = successRespone.data
+                    if (res.code === 404) {
+                        this.$message.error(res.message)
                         this.loading = false
                         return
                     }
-                    if (responseResult.code === 401) {
+                    if (res.code === 401) {
                         this.Logout()
                         return
                     }
-                    if (responseResult.code === 200) {
+                    if (res.code === 200) {
                         this.label_info.push({
-                            id: responseResult.data.id,
-                            name: responseResult.data.name,
-                            count: responseResult.data.count,
+                            id: res.data.id,
+                            name: res.data.name,
+                            count: res.data.count,
                             row_id: this.label_info.length
                         })
-                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.$store.commit('setRnd', res.data.rnd)
                         this.$message({
                             message: '添加成功',
                             type: 'success'
@@ -159,20 +159,20 @@ export default {
                     rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code === 404) {
-                        this.$message.error(responseResult.message)
+                    let res = successRespone.data
+                    if (res.code === 404) {
+                        this.$message.error(res.message)
                         this.loading = false
                         return
                     }
-                    if (responseResult.code === 401) {
+                    if (res.code === 401) {
                         this.Logout()
                         return
                     }
-                    if (responseResult.code === 200) {
+                    if (res.code === 200) {
                         this.label_info.splice(this.focus_row_id, 1)
                         for (let i = this.focus_row_id; i < this.label_info.length; ++i) this.label_info[i].row_id = i
-                        this.$store.commit('setRnd', responseResult.data.rnd)
+                        this.$store.commit('setRnd', res.data.rnd)
                         this.$message({
                             message: '删除成功',
                             type: 'success'
@@ -203,19 +203,19 @@ export default {
                     rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code === 404) {
-                        this.$message.error(responseResult.message)
+                    let res = successRespone.data
+                    if (res.code === 404) {
+                        this.$message.error(res.message)
                         this.loading = false
                         return
                     }
-                    if (responseResult.code === 401) {
+                    if (res.code === 401) {
                         this.Logout()
                         return
                     }
-                    if (responseResult.code === 200) {
-                        this.label_info[this.focus_row_id].name = responseResult.data.label_name
-                        this.$store.commit('setRnd', responseResult.data.rnd)
+                    if (res.code === 200) {
+                        this.label_info[this.focus_row_id].name = res.data.label_name
+                        this.$store.commit('setRnd', res.data.rnd)
                         this.$message({
                             message: '编辑成功',
                             type: 'success'
@@ -237,9 +237,9 @@ export default {
                     belong: this.LabelType
                 })
                 .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code === 200) {
-                        this.label_info = responseResult.data.label_info
+                    let res = successRespone.data
+                    if (res.code === 200) {
+                        this.label_info = res.data.label_info
                         for (let i = 0; i < this.label_info.length; ++i) this.label_info[i].row_id = i
                         this.$message({
                             message: '获取标签成功',

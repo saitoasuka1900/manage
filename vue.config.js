@@ -102,7 +102,7 @@ module.exports = {
     devServer: {
         proxy: {
             '/api': {
-                target: isProduction ? 'https://www.saitoasuka.xyz:8443' : 'http://localhost:8443', //设置调用的接口域名和端口
+                target: isProduction ? 'https://www.saitoasuka.xyz' : 'http://localhost:8443', //设置调用的接口域名和端口
                 changeOrigin: true, //是否跨域
                 ws: true,
                 pathRewrite: {

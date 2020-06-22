@@ -93,7 +93,7 @@ const router = new VueRouter({
 })
 router.beforeEach((to, from, next) => {
     if (to.meta.requireAuth) {
-        if (localStorage.getItem('token'))
+        if (localStorage.getItem('token') && localStorage.getItem('state') === '2')
             next()
         else {
             next({

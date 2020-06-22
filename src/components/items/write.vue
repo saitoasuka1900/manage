@@ -1,7 +1,7 @@
 <template>
     <div class="opacity-set" style="text-align: initial;">
         <div class="title-input">
-            <el-input v-model="title" placeholder="请输入标题" maxlength="20" show-word-limit />
+            <el-input v-model="title" placeholder="请输入标题" maxlength="40" show-word-limit />
             <el-select v-model="category" placeholder="请选择类别" style="height: 100%; width: 120px;">
                 <el-option
                     v-for="item in catagoty_options"
@@ -110,21 +110,23 @@ export default {
                     return
                 }
             }
-            if (this.value === '') {
+            if (this.content === '') {
                 alert('文章内容为空')
                 return
             }
+            console.log(this.label)
             let labels = []
             for (let label of this.label) {
                 if (typeof label === Number) labels.push(this.label_options[label].name)
                 else {
-                    if (label.length > 6 || !this.checkSpecificKey(label)) {
-                        this.message.error('标签长度超出限制或含非法字符')
+                    if (label.length > 8 || !this.checkSpecificKey(label)) {
+                        this.$message.error('标签长度超出限制或含非法字符')
                         return
                     }
                     labels.push(label)
                 }
             }
+            console.log(2)
             this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
             this.postType = type
             let formData = new FormData()
@@ -169,7 +171,7 @@ export default {
                             description: this.description,
                             type: this.postType,
                             content: this.content,
-                            rnd: this.$store.state.rnd
+                            rnd: this.$store.state.rnd,
                         })
                         .then((successRespone) => {
                             let responseResult = successRespone.data
@@ -220,7 +222,7 @@ export default {
                         let label = this.saveLabal[j]
                         for (let i = 0; i < responseResult.data.labels.length; ++i) {
                             if (label != responseResult.data.labels[i].name) continue
-                            this.label.push(i + 1)
+                            this.label.push(label)
                             break
                         }
                     }

@@ -4,45 +4,18 @@
             <el-button @click="loginDialogVisible = true">点击打开登录框</el-button>
             <el-dialog title="后台登陆" :visible.sync="loginDialogVisible" :width="ModuleSize" center :close-on-click-modal='false'>
                 <div>
-                    <el-input placeholder="请输入用户名" v-model="username" >
+                    <el-input type="text" name="username" placeholder="请输入用户名" v-model="username" >
                         <template slot="prepend">用户名: </template>
                     </el-input>
                 </div>
                 <div style="margin-top: 15px;">
-                    <el-input placeholder="请输入密码" v-model="password" >
+                    <el-input name="password" type="password" placeholder="请输入密码" v-model="password" >
                         <template slot="prepend">密码: </template>
                     </el-input>
                 </div>
                 <span slot="footer" class="dialog-footer">
                     <el-button @click="loginDialogVisible = false">取 消</el-button>
                     <el-button type="primary" @click="Login()">登 录</el-button>
-                </span>
-            </el-dialog>
-            <el-button @click="registerDialogVisible = true">点击打开注册框</el-button>
-            <el-dialog title="后台注册" :visible.sync="registerDialogVisible" :width="ModuleSize" center :close-on-click-modal='false'>
-                <div>
-                    <el-input placeholder="请输入用户名" v-model="username" >
-                        <template slot="prepend">用户名: </template>
-                    </el-input>
-                </div>
-                <div style="margin-top: 15px;">
-                    <el-input placeholder="请输入昵称" v-model="nickname" >
-                        <template slot="prepend">昵称: </template>
-                    </el-input>
-                </div>
-                <div style="margin-top: 15px">
-                    <el-input placeholder="请输入密码" v-model="password" >
-                        <template slot="prepend">密码: </template>
-                    </el-input>
-                </div>
-                <div style="margin-top: 15px">
-                    <el-input placeholder="请输入邮箱" v-model="Email" >
-                        <template slot="prepend">邮箱: </template>
-                    </el-input>
-                </div>
-                <span slot="footer" class="dialog-footer">
-                    <el-button @click="registerDialogVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="Register()">注册</el-button>
                 </span>
             </el-dialog>
         </el-main>
@@ -61,12 +34,9 @@ export default {
             url_root: 'https://saitoasuka-1258793314.file.myqcloud.com/manage/login/',
             bgurl: '',
             loginDialogVisible: true,
-            registerDialogVisible: false,
             ModuleSize: '',
             username: '',
             password: '',
-            Email: '',
-            nickname: '',
         }
     },
     methods: {
@@ -86,7 +56,7 @@ export default {
                         this.$message.error(responseResult.message)
                         return
                     }
-                    this.$store.commit('Login', {token: responseResult.data.token, rnd: responseResult.data.rnd})
+                    this.$store.commit('Login', responseResult.data)
                     this.$message({
                         message: '登陆成功',
                         type: 'success'
@@ -96,40 +66,6 @@ export default {
                 })
                 .catch((failRespone) => {
                     this.$message.error('登录失败')
-                    return failRespone
-                })
-        },
-        Register() {
-            if (this.username === '' || this.password === '') {
-                this.$message({
-                    message: '用户名或密码为空',
-                    type: 'warning'
-                })
-                return
-            }
-            this.$axios
-                .post('/Register', {
-                    username: this.username,
-                    nickname: this.nickname,
-                    password: this.password,
-                    email: this.Email
-                })
-                .then((successRespone) => {
-                    let responseResult = successRespone.data
-                    if (responseResult.code !== 200) {
-                        this.$message.error(responseResult.message);
-                        return
-                    }
-                    this.$store.commit('Login', {token: responseResult.data.token, rnd: responseResult.data.rnd})
-                    let redirect = decodeURIComponent(this.$route.query.redirect || '/');
-                    this.$message({
-                        message: '注册成功',
-                        type: 'success'
-                    })
-                    this.$router.push({ path: redirect })
-                })
-                .catch((failRespone) => {
-                    this.$message.error('注册失败')
                     return failRespone
                 })
         },

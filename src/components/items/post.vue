@@ -109,6 +109,7 @@ export default {
                     id: this.focus_row_id,
                     pageSize: this.pageSize,
                     pageId: this.pageId,
+                    type: this.where,
                     rnd: this.$store.state.rnd
                 })
                 .then((successRespone) => {

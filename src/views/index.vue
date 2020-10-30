@@ -1,6 +1,6 @@
 <template>
     <el-container
-        style="background-image: url('https://saitoasuka-1258793314.file.myqcloud.com/manage/index/index-bg.jpg')"
+        :style="{ backgroundImage: 'url(\'' + bgurl + '\')' }"
     >
         <el-scrollbar :style="{ minWidth: isCollapse ? '205px' : '80px' }">
             <el-aside
@@ -101,7 +101,8 @@ export default {
                 ]),
                 new Item('el-icon-asuka-user', '用户管理', '/user-manage'),
                 new Item('el-icon-chat-dot-round', '评论管理', '/comment-manage')
-            ]
+            ],
+            bgurl: process.env.VUE_APP_CDN_SOURCE + 'index/index-bg.jpg',
         }
     },
     methods: {

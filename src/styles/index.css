@@ -12,3 +12,6 @@
 .el-dialog__body {
     padding: 5px 25px !important;
 }
+.frac-line {
+    border-bottom-width: 0.05em !important;
+}

@@ -75,6 +75,7 @@ export default {
             category: '',
             label_options: [],
             label: [],
+            label_id: [],
             saveLabel: [],
             loadingInstance: '',
             imgFiles: [],
@@ -114,11 +115,20 @@ export default {
                 alert('文章内容为空')
                 return
             }
-            console.log(this.label)
             let labels = []
             for (let label of this.label) {
-                if (typeof label === Number) labels.push(this.label_options[label].name)
+                if (typeof label === Number) labels.push(this.label_options[label].value)
                 else {
+                    let flag = false
+                    for (let option of this.label_options) {
+                        if (label === option.name) {
+                            labels.push(option.value)
+                            flag = true
+                            break
+                        }
+                    }
+                    if (flag)
+                        continue
                     if (label.length > 8 || !this.checkSpecificKey(label)) {
                         this.$message.error('标签长度超出限制或含非法字符')
                         return
@@ -126,7 +136,6 @@ export default {
                     labels.push(label)
                 }
             }
-            console.log(2)
             this.loadingInstance = this.$loading({ fullScreen: true, background: 'rgba(0, 0, 0, .4)' })
             this.postType = type
             let formData = new FormData()
@@ -310,6 +319,7 @@ export default {
                     this.description = ''
                     this.category = ''
                     this.label.length = 0
+                    this.label_id.length = 0
                     this.postId = '-1'
                     this.postType = ''
                     this.content = Content()

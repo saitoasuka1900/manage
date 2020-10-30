@@ -31,7 +31,7 @@
 export default {
     data() {
         return {
-            url_root: 'https://saitoasuka-1258793314.file.myqcloud.com/manage/login/',
+            url_root: process.env.VUE_APP_CDN_SOURCE + 'login/',
             bgurl: '',
             loginDialogVisible: true,
             ModuleSize: '',
